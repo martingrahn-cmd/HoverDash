@@ -298,16 +298,44 @@ function buildTunnel(){
     const s=neonStrip(S,C.cyan,.08,.03,ll,x,.02,lz,.6);tunnelStripMeshes.push(s);
     const gl=neonStrip(S,C.cyan,.4,.005,ll,x,.005,lz,.06);tunnelStripMeshes.push(gl);
   }
-  // Inner lane dividers — dashed
+  // Inner lane dividers — solid continuous strips + glow
   for(let i=1;i<LANES;i++){
     const x=(i-LANES/2)*LW;
-    for(let z=16;z>16-ll;z-=3){
-      const d=neonStrip(S,C.cyan,.04,.015,.5,x,.01,z,.15);tunnelStripMeshes.push(d);
-    }
+    const d=neonStrip(S,C.cyan,.06,.02,ll,x,.015,lz,.28);tunnelStripMeshes.push(d);
+    const dg=neonStrip(S,C.cyan,.55,.004,ll,x,.003,lz,.07);tunnelStripMeshes.push(dg);
   }
   // Build visualizer bars
   buildVizBars();
 }
+
+// ═══════════════════════════════════════════════════
+// LANE EFFECTS — pulse waves + ship highlight
+// ═══════════════════════════════════════════════════
+const LANE_COLS=[0x9944ff,0x00e5ff,0x00ff99]; // left=purple, center=cyan, right=mint
+const WAVE_SPAN=TLEN+10;
+const laneWaves=[];
+(function initLaneEffects(){
+  // Pulse waves on all lane boundaries (inner dividers + outer edges)
+  const divXs=[(-LANES/2)*LW];for(let i=1;i<LANES;i++) divXs.push((i-LANES/2)*LW);divXs.push((LANES/2)*LW);
+  const N=10; // waves per line
+  for(const wx of divXs){
+    for(let i=0;i<N;i++){
+      const z=16-(i/N)*WAVE_SPAN;
+      const m=new THREE.Mesh(
+        new THREE.BoxBufferGeometry(.16,.03,2),
+        new THREE.MeshBasicMaterial({color:C.cyan,transparent:true,opacity:0,depthWrite:false,blending:THREE.AdditiveBlending})
+      );
+      m.position.set(wx,.04,z);m.userData={waveX:wx};
+      S.add(m);laneWaves.push(m);
+    }
+  }
+})();
+// Lane highlight under ship
+const LANE_HL_COLS=LANE_COLS;
+let laneHlLane=1;
+const laneHlMat=new THREE.MeshBasicMaterial({color:LANE_COLS[1],transparent:true,opacity:.16,depthWrite:false,blending:THREE.AdditiveBlending,side:THREE.DoubleSide});
+const laneHl=new THREE.Mesh(new THREE.PlaneBufferGeometry(LW*.88,3.6),laneHlMat);
+laneHl.rotation.x=-Math.PI/2;laneHl.position.set(0,.013,SHIP_Z+.3);S.add(laneHl);
 
 // ═══════════════════════════════════════════════════
 // VISUALIZER — Reactive waveforms + spectrum EQ
@@ -377,6 +405,24 @@ function buildVizBars(){
       S.add(bar);vizSpectrumBars.push(bar);
     }
   }
+}
+
+function updateLaneEffects(){
+  const playing=gs==='playing';
+  const eSpd2=spd+(boostActive?BOOST_SPD:0);
+  const waveSpd=eSpd2*1.7; // waves rush faster than track for "pulse" feel
+  for(const w of laneWaves){
+    if(playing) w.position.z+=waveSpd*dt;
+    if(w.position.z>DESPAWN_Z+1) w.position.z-=WAVE_SPAN;
+    // Traveling wave: phase keyed on Z so pulses appear to run toward player
+    const phase=elapsed*2.8-w.position.z*0.11;
+    w.material.opacity=Math.max(0,Math.sin(phase))*0.7+0.08;
+  }
+  // Lane highlight: follow ship X, change color per lane
+  laneHl.visible=(gs==='playing'||gs==='countdown');
+  laneHl.position.x+=(ship.position.x-laneHl.position.x)*Math.min(1,dt*14);
+  if(laneHlLane!==curLane){laneHlLane=curLane;laneHlMat.color.setHex(LANE_HL_COLS[curLane]);}
+  laneHlMat.opacity=0.13+Math.sin(elapsed*3.5)*0.04;
 }
 
 function updateVizBars(){
@@ -987,12 +1033,13 @@ function mkDualLaser(){
 
 function mkWallGate(){
   const g=new THREE.Group();g.userData={type:OT.WALL_GATE,active:false,lane:-1,lanes:[],mt:0,runLights:[]};
-  const wallH=7,wallD=14,wallW=LW*1.1;
+  const wallH=7,wallD=25,wallW=LW*1.1;
   const wc=C.red;
   for(let wi=0;wi<2;wi++){
     const wall=new THREE.Group();wall.userData={wallIndex:wi};
-    // Main body — tall dark box with neon edges
-    tronBox(wall,wallW,wallH,wallD,wc,0,wallH/2,0);
+    // Main body — solid box, DoubleSide so camera can't clip through
+    const wallBodyMat=new THREE.MeshBasicMaterial({color:C.body,side:THREE.DoubleSide});
+    tronBox(wall,wallW,wallH,wallD,wc,0,wallH/2,0,wallBodyMat);
     // Top neon strip full length
     neonStrip(wall,wc,wallW+.1,.08,wallD+.1,0,wallH+.04,0,.9);
     // Bottom neon strip
@@ -1259,26 +1306,31 @@ function forceZone(i){
 // ═══════════════════════════════════════════════════
 function spawnO(){
   // Check closest obstacle and closest horizontal separately
-  let closestZ=SPAWN_Z+999,closestHZ=SPAWN_Z+999;
+  let closestZ=SPAWN_Z+999,closestHZ=SPAWN_Z+999,closestRampZ=SPAWN_Z+999,closestWGZ=SPAWN_Z+999;
   for(const o of aObs){
     if(o.position.z<closestZ) closestZ=o.position.z;
     if((o.userData.type===OT.LOW_LASER||o.userData.type===OT.HIGH_LASER||o.userData.type===OT.DUAL_LASER||o.userData.type===OT.WALL_GATE)&&o.position.z<closestHZ) closestHZ=o.position.z;
+    if(o.userData.type===OT.RAMP&&o.position.z<closestRampZ) closestRampZ=o.position.z;
+    if(o.userData.type===OT.WALL_GATE&&o.position.z<closestWGZ) closestWGZ=o.position.z;
   }
   if(closestZ-SPAWN_Z<10) return; // min 10 gap from ANY obstacle
+  // Safe zone: no obstacles within 80 units behind a WALL_GATE
+  for(const o of aObs){if(o.userData.type===OT.WALL_GATE&&o.position.z-SPAWN_Z<80) return;}
   // Pick type candidates
   const ts=[OT.V_LASER,OT.V_LASER,OT.V_LASER];
-  if(diff>=1) ts.push(OT.V_LASER,OT.RAMP,OT.RAMP);
-  if(diff>=2) ts.push(OT.V_LASER,OT.V_LASER,OT.RAMP,OT.RAMP);
+  const rampOk=closestWGZ-SPAWN_Z>=30; // no ramps within 30 units of a wall gate
+  if(diff>=1){ts.push(OT.V_LASER);if(rampOk) ts.push(OT.RAMP,OT.RAMP);}
+  if(diff>=2){ts.push(OT.V_LASER,OT.V_LASER);if(rampOk) ts.push(OT.RAMP,OT.RAMP);}
   if(diff>=3) ts.push(OT.V_LASER,OT.V_LASER);
-  // Only allow horizontal lasers if 35+ gap from last horizontal
-  if(diff>=1&&(closestHZ-SPAWN_Z>=35)) ts.push(OT.LOW_LASER);
-  if(diff>=2&&(closestHZ-SPAWN_Z>=35)) ts.push(OT.HIGH_LASER);
+  // Only allow horizontal lasers if 35+ gap from last horizontal AND 20+ from last ramp
+  if(diff>=1&&(closestHZ-SPAWN_Z>=35)&&(closestRampZ-SPAWN_Z>=20)) ts.push(OT.LOW_LASER);
+  if(diff>=2&&(closestHZ-SPAWN_Z>=35)&&(closestRampZ-SPAWN_Z>=20)) ts.push(OT.HIGH_LASER);
   // Dual laser: 2 columns blocking 2 lanes
   if(diff>=2&&(closestHZ-SPAWN_Z>=25)) ts.push(OT.DUAL_LASER);
   if(diff>=3&&(closestHZ-SPAWN_Z>=25)) ts.push(OT.DUAL_LASER);
-  // Wall gate: tall walls blocking 2 lanes (beat-saber style)
-  if(diff>=3&&(closestHZ-SPAWN_Z>=40)) ts.push(OT.WALL_GATE);
-  if(diff>=4&&(closestHZ-SPAWN_Z>=40)) ts.push(OT.WALL_GATE);
+  // Wall gate: tall walls blocking 2 lanes (beat-saber style) — 30+ from ramps
+  if(diff>=3&&(closestHZ-SPAWN_Z>=40)&&(closestRampZ-SPAWN_Z>=30)) ts.push(OT.WALL_GATE);
+  if(diff>=4&&(closestHZ-SPAWN_Z>=40)&&(closestRampZ-SPAWN_Z>=30)) ts.push(OT.WALL_GATE);
   const t=ts[Math.floor(Math.random()*ts.length)];
   const o=gp(obsPool,t);if(!o) return;
   const lane=Math.floor(Math.random()*LANES);
@@ -1309,7 +1361,20 @@ function spawnO(){
   }
   o.userData.mt=0;o.visible=true;aObs.push(o);
 }
-function spawnC(){const o=gp(colPool);if(!o) return;const l=Math.floor(Math.random()*LANES);o.position.set((l-1)*LW,0,SPAWN_Z);o.userData.active=true;o.userData.lane=l;o.visible=true;aCol.push(o);}
+function spawnC(){
+  const o=gp(colPool);if(!o) return;
+  // Avoid lanes occupied by obstacles near spawn
+  const badLanes=new Set();
+  for(const ob of aObs){
+    if(ob.position.z<SPAWN_Z+5){
+      if(ob.userData.lane>=0) badLanes.add(ob.userData.lane);
+      if(ob.userData.lanes) ob.userData.lanes.forEach(l=>badLanes.add(l));
+    }
+  }
+  const goodLanes=[];for(let i=0;i<LANES;i++) if(!badLanes.has(i)) goodLanes.push(i);
+  const l=goodLanes.length>0?goodLanes[Math.floor(Math.random()*goodLanes.length)]:Math.floor(Math.random()*LANES);
+  o.position.set((l-1)*LW,0,SPAWN_Z);o.userData.active=true;o.userData.lane=l;o.visible=true;aCol.push(o);
+}
 function spawnPU(){const t=Math.floor(Math.random()*3),o=gp(puPool,t);if(!o) return;const l=Math.floor(Math.random()*LANES);o.position.set((l-1)*LW,0,SPAWN_Z);o.userData.active=true;o.userData.lane=l;o.visible=true;aPU.push(o);}
 
 // ═══════════════════════════════════════════════════
@@ -1365,8 +1430,8 @@ function collide(){
       continue;
     }
     // Z-range check (wider for WALL_GATE due to 3-unit depth)
-    const zFront=t===OT.WALL_GATE?SHIP_Z+8:SHIP_Z+1.5;
-    const zBack=t===OT.WALL_GATE?SHIP_Z-8:SHIP_Z-2;
+    const zFront=t===OT.WALL_GATE?SHIP_Z+13:SHIP_Z+1.5;
+    const zBack=t===OT.WALL_GATE?SHIP_Z-13:SHIP_Z-2;
     if(oz>zFront||oz<zBack) continue;
     if(!o.userData.lanes.includes(curLane)) continue;
     if(onRamp&&t!==OT.WALL_GATE) continue; // WALL_GATE is too tall to ramp over
@@ -1385,6 +1450,9 @@ function collide(){
       let inWall=false;
       for(const bl of o.userData.lanes){if(Math.abs(ship.position.x-(bl-1)*LW)<LW*.5){inWall=true;break;}}
       if(!inWall) continue;
+      // Bounce to open lane instead of dying
+      const openLane=[0,1,2].find(l=>!o.userData.lanes.includes(l));
+      if(openLane!==undefined){curLane=openLane;targetX=(openLane-1)*LW;screenShake=.12;emitSparks(ship.position.x,SHIP_Y0+.5,SHIP_Z,12);continue;}
     }
     else if(t===OT.LOW_LASER){if(air) continue;}
     else if(t===OT.HIGH_LASER){if(isDuck||air) continue;}
@@ -1508,7 +1576,21 @@ function start(){
   paused=false;document.getElementById('pause-overlay').classList.remove('show');
 }
 
-function sLane(d){if(gs!=='playing'&&gs!=='countdown') return;const n=curLane+d;if(n<0||n>=LANES) return;curLane=n;targetX=(curLane-1)*LW;}
+function sLane(d){
+  if(gs!=='playing'&&gs!=='countdown') return;
+  const n=curLane+d;
+  if(n<0||n>=LANES) return;
+  // Wall gate bounce: only lock when wall is close (within 35 units ahead) and not yet passed
+  for(const o of aObs){
+    if(o.userData.type===OT.WALL_GATE&&o.userData.active
+       &&o.position.z>SHIP_Z-35          // wall must be close (approaching)
+       &&o.position.z<SHIP_Z+15          // and not fully passed
+       &&o.userData.lanes.includes(n)){
+      targetX=(curLane-1)*LW;screenShake=.06;return;
+    }
+  }
+  curLane=n;targetX=(curLane-1)*LW;
+}
 
 // INPUT
 document.addEventListener('keydown',e=>{
@@ -1899,10 +1981,23 @@ function loop(){
       fwdLt.color.setHex(C.cyan);fwdLt.intensity=1.2;
     }
   }
-  updateSpeedLines();updateSparks();updateVizBars();
+  updateSpeedLines();updateSparks();updateVizBars();updateLaneEffects();
+  // Camera follow: normally 0.3, but ramp up to 0.85 when passing through a WALL_GATE
+  let camFollow=.3;
+  for(const o of aObs){
+    if(o.userData.type===OT.WALL_GATE&&o.userData.active){
+      const dz=o.position.z-SHIP_Z; // negative = approaching, positive = passed
+      if(dz>-40&&dz<18){
+        // Smooth blend: ramp from 0.3→0.85 as wall gets close, hold through pass
+        const t=dz<-5?1-(-5-dz)/35 : dz>12?1-(dz-12)/6 : 1; // ramp in/out
+        camFollow=Math.max(camFollow,.3+Math.max(0,Math.min(1,t))*.55);
+      }
+    }
+  }
+  const camTargetX=ship.position.x*camFollow;
   const shake=Math.max(screenShake,landShake);if(screenShake>0) screenShake-=dt;if(landShake>0) landShake-=dt*2;
-  if(shake>0){const s=shake*(screenShake>landShake?3:1.5);cam.position.x=ship.position.x*.3+(Math.random()-.5)*s;cam.position.y=4.8+(Math.random()-.5)*s+jumpY*.25;}
-  else{cam.position.x+=(ship.position.x*.3-cam.position.x)*dt*4;cam.position.y+=(4.8+jumpY*.25-cam.position.y)*dt*4;}
+  if(shake>0){const s=shake*(screenShake>landShake?3:1.5);cam.position.x=camTargetX+(Math.random()-.5)*s;cam.position.y=4.8+(Math.random()-.5)*s+jumpY*.25;}
+  else{cam.position.x+=(camTargetX-cam.position.x)*dt*4;cam.position.y+=(4.8+jumpY*.25-cam.position.y)*dt*4;}
   R.render(S,cam);perf();
 }
 loop();
