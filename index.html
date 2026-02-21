@@ -21,6 +21,14 @@
   #wave-ind.rest{color:#44ffaa;animation:pulse-rest .8s ease-in-out infinite}
   #wave-ind.action{color:#ff4466}
   @keyframes pulse-rest{0%,100%{opacity:.5}50%{opacity:1}}
+  #combo-wrap{margin-top:6px;display:flex;align-items:center;justify-content:center;gap:8px;opacity:0;transition:opacity .3s}
+  #combo-wrap.active{opacity:1}
+  #combo-mult{font-size:18px;font-weight:900;letter-spacing:1px;color:#ffdd44;text-shadow:0 0 12px #ffaa0066;min-width:32px;text-align:right}
+  #combo-mult.high{color:#ff6622;text-shadow:0 0 16px #ff440088;animation:combo-pulse .4s ease-in-out infinite}
+  #combo-mult.max{color:#ff2244;text-shadow:0 0 20px #ff0044aa;animation:combo-pulse .25s ease-in-out infinite}
+  @keyframes combo-pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}
+  #combo-bar-bg{width:80px;height:5px;background:#ffffff11;border-radius:3px;overflow:hidden}
+  #combo-bar{height:100%;width:100%;border-radius:3px;transition:background .3s}
   #powerup-hud{position:fixed;top:80px;left:50%;transform:translateX(-50%);pointer-events:none;z-index:10;display:flex;gap:8px}
   .pu-icon{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;border:2px solid;opacity:0;transition:opacity .3s}
   .pu-icon.active{opacity:1}
@@ -54,8 +62,10 @@
 </head>
 <body>
 <div id="hud">
-  <div class="hud-item"><div class="hud-label">Coins</div><div class="hud-value" id="score-val">0</div></div>
-  <div id="hud-center"><div id="meter-val">0</div><div id="meter-unit">METERS</div><div id="zone-label"></div><div id="wave-ind"></div></div>
+  <div class="hud-item"><div class="hud-label">Score</div><div class="hud-value" id="score-val">0</div></div>
+  <div id="hud-center"><div id="meter-val">0</div><div id="meter-unit">METERS</div><div id="zone-label"></div><div id="wave-ind"></div>
+    <div id="combo-wrap"><div id="combo-mult"></div><div id="combo-bar-bg"><div id="combo-bar"></div></div></div>
+  </div>
   <div class="hud-item"><div class="hud-label">Speed</div><div class="hud-value" id="speed-val">1</div></div>
 </div>
 <div id="powerup-hud">
@@ -107,7 +117,7 @@ const LW=2.8,LANES=3,MARGIN=5;
 const TW=LW*LANES+MARGIN*2,HW=TW/2,WH=8;
 const TLEN=200,SEG=25,NSEGS=Math.ceil(TLEN/SEG)+1;
 const SPAWN_Z=-190,DESPAWN_Z=18,SHIP_Z=2,SHIP_Y0=0.6;
-const SPD0=22,SPD_MAX=68,SPD_INC=0.28;
+const SPD0=22,SPD_MAX=88,SPD_INC=0.28,SPD_SLOW=66; // slower increase after speed 9
 const BASE_FOV=62,MAX_FOV=78;
 const RAMP_H=1.2,RAMP_LEN=24;
 const OT={V_LASER:0,LOW_LASER:1,HIGH_LASER:2,RAMP:3,DUAL_LASER:4,WALL_GATE:5};
@@ -145,9 +155,13 @@ let curZone=0,zoneTimer=0;const ZONE_DUR=18;
 // STATE
 // ═══════════════════════════════════════════════════
 let gs='menu',score=0,meters=0,spd=SPD0,curLane=1,targetX=0;
+let comboCount=0,comboTimer=0,comboMultiplier=1,coinScore=0;
+const COMBO_DUR=2.0,COMBO_MAX=10,COMBO_FILL=3; // coins needed per multiplier level
 let paused=false,musicWasPlaying=false;
 let firstPlay=true;
 let jumping=false,jumpY=0,jumpPhase='none',jumpVelY=0,holdingJump=false;
+let hasDoubleJump=false,spinActive=false,spinTimer=0,spinAngle=0;
+const SPIN_DUR=0.35,SPIN_INVULN=0.3,SPIN_BOOST=4.5;
 let ducking=false,duckTimer=0;const DUCK_DUR=0.6;
 let onRamp=false,rampRef=null,launchCD=0;
 let landShake=0,landWobble=0;
@@ -1359,7 +1373,7 @@ function spawnO(){
   } else {
     o.position.set((lane-1)*LW,0,SPAWN_Z);o.userData.active=true;o.userData.lane=lane;o.userData.lanes=[lane];
   }
-  o.userData.mt=0;o.visible=true;aObs.push(o);
+  o.userData.mt=0;o.userData.whooshPlayed=false;o.visible=true;aObs.push(o);
 }
 function spawnC(){
   const o=gp(colPool);if(!o) return;
@@ -1400,7 +1414,7 @@ function collide(){
       // Lane change exit — gentle side-fall, no upward velocity
       onRamp=false;rampRef=null;jumping=true;jumpPhase='fall';jumpVelY=-2;
     } else {
-      score+=Math.ceil(30*dt);
+      coinScore+=Math.ceil(30*dt);
       // Speed boost while on ramp!
       if(gs==='playing') spd=Math.min(SPD_MAX, spd+12*dt);
       const relZ2=SHIP_Z-rampRef.position.z;
@@ -1456,14 +1470,21 @@ function collide(){
     }
     else if(t===OT.LOW_LASER){if(air) continue;}
     else if(t===OT.HIGH_LASER){if(isDuck||air) continue;}
-    if(boostActive){screenShake=.1;emitDeathExplosion(o.position.x||ship.position.x,1.5,o.position.z);rp(o);aObs.splice(i,1);score+=25;showBonus('+25 SMASH!');continue;}
+    if(spinActive){continue;} // invincible during barrel roll
+    if(boostActive){screenShake=.1;emitDeathExplosion(o.position.x||ship.position.x,1.5,o.position.z);rp(o);aObs.splice(i,1);coinScore+=25;showBonus('+25 SMASH!');continue;}
     if(shieldActive){shieldActive=false;shieldTimer=0;shieldBubble.visible=false;screenShake=.15;emitPUBurst(ship.position.x,1,SHIP_Z,C.cyan);rp(o);aObs.splice(i,1);document.getElementById('pu-shield').classList.remove('active');continue;}
     return die();
   }
   for(let i=aCol.length-1;i>=0;i--){
     const c=aCol[i];
     if(magnetActive){const dx=sx-c.position.x,dz=SHIP_Z-c.position.z;if(Math.sqrt(dx*dx+dz*dz)<15){c.position.x+=dx*dt*6;c.position.z+=dz*dt*6;}}
-    if(c.position.z<SHIP_Z+1.2&&c.position.z>SHIP_Z-1.2&&Math.abs(c.position.x-sx)<LW*.7){score+=10;flashTimer=.1;emitCoinSparkle(c.position.x,1,c.position.z);rp(c);aCol.splice(i,1);}
+    if(c.position.z<SHIP_Z+1.2&&c.position.z>SHIP_Z-1.2&&Math.abs(c.position.x-sx)<LW*.7){
+      comboCount++;comboTimer=COMBO_DUR;
+      const newMult=Math.min(COMBO_MAX,1+Math.floor(comboCount/COMBO_FILL));
+      if(newMult>comboMultiplier){comboMultiplier=newMult;showBonus('x'+comboMultiplier+' COMBO!');}
+      coinScore+=10*comboMultiplier;
+      flashTimer=.1;emitCoinSparkle(c.position.x,1,c.position.z);rp(c);aCol.splice(i,1);
+    }
   }
   for(let i=aPU.length-1;i>=0;i--){
     const p=aPU[i];
@@ -1494,12 +1515,21 @@ function doJump(){
   if(gs!=='playing'&&gs!=='countdown') return;
   if(onRamp){
     onRamp=false;rampRef=null;jumping=true;jumpPhase='rise';jumpVelY=12;
-    launchCD=0.5; // prevent re-attach for 0.5s
-    showBonus('+50 LAUNCH!');score+=50;
+    launchCD=0.5;hasDoubleJump=true; // ramp launch allows double jump too
+    showBonus('+50 LAUNCH!');coinScore+=50;
     emitSparks(ship.position.x,SHIP_Y0+RAMP_H,SHIP_Z,25);
     screenShake=.15;return;
   }
-  if(jumping) return;ducking=false;duckTimer=0;jumping=true;jumpPhase='rise';jumpVelY=9.5;
+  // Double jump — barrel roll with small upward kick
+  if(jumping&&hasDoubleJump&&!spinActive){
+    hasDoubleJump=false;spinActive=true;spinTimer=SPIN_DUR;spinAngle=0;
+    jumpVelY=SPIN_BOOST;jumpPhase='rise'; // small upward kick
+    coinScore+=15;showBonus('+15 SPIN!');screenShake=.08;
+    if(comboTimer>0) comboTimer=Math.min(COMBO_DUR,comboTimer+0.3);
+    emitSparks(ship.position.x,ship.position.y,SHIP_Z,12);
+    return;
+  }
+  if(jumping) return;ducking=false;duckTimer=0;jumping=true;jumpPhase='rise';jumpVelY=9.5;hasDoubleJump=true;
 }
 function doDuck(){if((gs!=='playing'&&gs!=='countdown')||jumping||onRamp) return;ducking=true;duckTimer=DUCK_DUR;}
 function updateJump(){
@@ -1510,7 +1540,7 @@ function updateJump(){
   if(jumpPhase==='rise'&&jumpVelY<=0) jumpPhase=holdingJump?'float':'fall';
   if(jumpPhase==='float'&&!holdingJump) jumpPhase='fall';
   jumpY+=jumpVelY*dt;
-  if(jumpY<=0){jumpY=0;jumping=false;jumpPhase='none';jumpVelY=0;landShake=.18;landWobble=.8;emitLandingImpact(ship.position.x,SHIP_Z);}
+  if(jumpY<=0){jumpY=0;jumping=false;jumpPhase='none';jumpVelY=0;hasDoubleJump=false;spinActive=false;spinTimer=0;spinAngle=0;landShake=.18;landWobble=.8;emitLandingImpact(ship.position.x,SHIP_Z);}
   if(jumpY>6) jumpY=6;
 }
 function updateDuck(){if(!ducking) return;duckTimer-=dt;if(duckTimer<=0){ducking=false;duckTimer=0;}}
@@ -1518,7 +1548,7 @@ function updateDuck(){if(!ducking) return;duckTimer-=dt;if(duckTimer<=0){ducking
 // ═══════════════════════════════════════════════════
 // GAME
 // ═══════════════════════════════════════════════════
-let bestMeters=0;try{bestMeters=parseInt(localStorage.getItem('hd_bestm'))||0;}catch(e){}
+let bestScore=0;try{bestScore=parseInt(localStorage.getItem('hd_best'))||0;}catch(e){}
 
 function togglePause(){
   if(gs!=='playing'&&gs!=='countdown'&&!paused) return;
@@ -1543,12 +1573,13 @@ function die(){
   gs='dead';screenShake=.4;
   emitDeathExplosion(ship.position.x,ship.position.y,SHIP_Z);
   const m=Math.floor(meters);
-  if(m>bestMeters){bestMeters=m;try{localStorage.setItem('hd_bestm',bestMeters);}catch(e){}}
+  const finalScore=m+coinScore;
+  if(finalScore>bestScore){bestScore=finalScore;try{localStorage.setItem('hd_best',bestScore);}catch(e){}}
   document.getElementById('overlay').classList.remove('hidden');
   document.getElementById('game-title').textContent='GAME OVER';document.getElementById('game-subtitle').textContent='';
-  document.getElementById('final-score').style.display='block';document.getElementById('final-score').textContent=m+'m';
-  document.getElementById('final-coins').style.display='block';document.getElementById('final-coins').textContent='\u{1FA99} '+score+' coins';
-  document.getElementById('best-score').style.display='block';document.getElementById('best-score').textContent='BEST: '+bestMeters+'m';
+  document.getElementById('final-score').style.display='block';document.getElementById('final-score').textContent='SCORE: '+finalScore;
+  document.getElementById('final-coins').style.display='block';document.getElementById('final-coins').textContent=m+'m  +  \u{1FA99}'+coinScore;
+  document.getElementById('best-score').style.display='block';document.getElementById('best-score').textContent='BEST: '+bestScore;
   document.getElementById('start-btn').textContent='RETRY';
   document.getElementById('pause-btn').classList.remove('show');
 }
@@ -1556,8 +1587,10 @@ function die(){
 function start(){
   aObs.forEach(o=>rp(o));aCol.forEach(c=>rp(c));aPU.forEach(p=>rp(p));
   aObs=[];aCol=[];aPU=[];score=0;meters=0;spd=SPD0;curLane=1;targetX=0;
+  comboCount=0;comboTimer=0;comboMultiplier=1;coinScore=0;
   jumping=false;jumpY=0;jumpVelY=0;jumpPhase='none';ducking=false;duckTimer=0;
   onRamp=false;rampRef=null;holdingJump=false;landShake=0;landWobble=0;launchCD=0;
+  hasDoubleJump=false;spinActive=false;spinTimer=0;spinAngle=0;
   obsTimer=.3;colTimer=0;puTimer=8;flashTimer=0;screenShake=0;diff=0;
   waveTimer=0;wavePhase='action';waveRestDur=0;
   shieldActive=false;magnetActive=false;boostActive=false;
@@ -1648,6 +1681,47 @@ function initAudio(){
   analyser.fftSize=FFTSIZE;analyser.smoothingTimeConstant=.8;
   analyser.connect(audioCtx.destination);
   freqData=new Uint8Array(analyser.frequencyBinCount);
+}
+
+// ── SFX: synthesised whoosh for wall gates ──
+let whooshBuf=null;
+function ensureWhooshBuf(){
+  if(whooshBuf||!audioCtx) return;
+  const dur=0.6,len=audioCtx.sampleRate*dur|0;
+  whooshBuf=audioCtx.createBuffer(1,len,audioCtx.sampleRate);
+  const d=whooshBuf.getChannelData(0);
+  for(let i=0;i<len;i++) d[i]=Math.random()*2-1;
+}
+function playWhoosh(vol){
+  if(!audioCtx) initAudio();
+  audioCtx.resume();
+  ensureWhooshBuf();
+  const t=audioCtx.currentTime,dur=0.45;
+  const src=audioCtx.createBufferSource();
+  src.buffer=whooshBuf;
+  // Low band – body of the whoosh
+  const lo=audioCtx.createBiquadFilter();
+  lo.type='bandpass';lo.Q.value=0.5;
+  lo.frequency.setValueAtTime(600,t);
+  lo.frequency.exponentialRampToValueAtTime(120,t+dur);
+  // High band – airy top
+  const hi=audioCtx.createBiquadFilter();
+  hi.type='highpass';hi.Q.value=0.3;
+  hi.frequency.setValueAtTime(2000,t);
+  hi.frequency.exponentialRampToValueAtTime(800,t+dur);
+  const gLo=audioCtx.createGain();
+  const gHi=audioCtx.createGain();
+  const v=Math.min(vol*3,1.0);
+  gLo.gain.setValueAtTime(0.001,t);
+  gLo.gain.linearRampToValueAtTime(v,t+0.03);
+  gLo.gain.setValueAtTime(v,t+dur*0.2);
+  gLo.gain.exponentialRampToValueAtTime(0.001,t+dur);
+  gHi.gain.setValueAtTime(0.001,t);
+  gHi.gain.linearRampToValueAtTime(v*0.5,t+0.02);
+  gHi.gain.exponentialRampToValueAtTime(0.001,t+dur*0.6);
+  src.connect(lo);lo.connect(gLo);gLo.connect(audioCtx.destination);
+  src.connect(hi);hi.connect(gHi);gHi.connect(audioCtx.destination);
+  src.start(t);src.stop(t+dur);
 }
 
 // ── AUDIO: iOS-compatible BufferSource + analyser ──
@@ -1758,7 +1832,7 @@ function loop(){
   }
 
   if(gs==='playing'){
-    const eSpd=spd+boostSpd;spd=Math.min(spd+SPD_INC*dt,SPD_MAX);meters+=eSpd*dt*.5;
+    const eSpd=spd+boostSpd;const spdInc=spd>=SPD_SLOW?SPD_INC*.4:SPD_INC;spd=Math.min(spd+spdInc*dt,SPD_MAX);meters+=eSpd*dt*.5;
     const tp=elapsed-gameT0;diff=tp>40?4:tp>28?3:tp>16?2:tp>8?1:0;
     obsTimer-=dt;waveTimer+=dt;
     if(wavePhase==='action'){
@@ -1766,6 +1840,7 @@ function loop(){
         wavePhase='rest';waveTimer=0;
         waveRestDur=WAVE_REST_MIN+Math.random()*(WAVE_REST_MAX-WAVE_REST_MIN);
         showBonus('★ CLEAR ★');flashTimer=.3;screenShake=.08;
+        if(comboTimer>0) comboTimer=Math.min(COMBO_DUR,comboTimer+1.5);
       }
       else if(obsTimer<=0){spawnO();const t=(spd-SPD0)/(SPD_MAX-SPD0);obsTimer=(.7+Math.random()*.7)*Math.max(.35,1-t*.55);}
     } else {
@@ -1864,6 +1939,12 @@ function loop(){
             rl.mesh.material.opacity=.1+wave*.6;
           }
         }
+        // Whoosh SFX when ship enters wall gate
+        if(!o.userData.whooshPlayed&&o.position.z+12.5>=SHIP_Z){
+          o.userData.whooshPlayed=true;
+          const spdFrac=Math.min((spd-SPD0)/(SPD_MAX-SPD0),1);
+          playWhoosh(.12+spdFrac*.2);
+        }
       }
       const dz=o.userData.type===OT.RAMP?DESPAWN_Z+RAMP_LEN+2:o.userData.type===OT.WALL_GATE?DESPAWN_Z+16:DESPAWN_Z;
       if(o.position.z>dz){if(onRamp&&rampRef===o){onRamp=false;rampRef=null;jumping=true;jumpPhase='fall';jumpVelY=0;}rp(o);aObs.splice(i,1);}
@@ -1871,8 +1952,28 @@ function loop(){
     for(let i=aCol.length-1;i>=0;i--){const c=aCol[i];c.position.z+=eSpd*dt;for(const ch of c.children) ch.rotation.y+=dt*3;if(c.position.z>DESPAWN_Z){rp(c);aCol.splice(i,1);}}
     for(let i=aPU.length-1;i>=0;i--){const p=aPU[i];p.position.z+=eSpd*dt;for(const ch of p.children) ch.rotation.y+=dt*2;if(p.position.z>DESPAWN_Z){rp(p);aPU.splice(i,1);}}
     collide();
+    // Combo timer
+    if(comboTimer>0){comboTimer-=dt;if(comboTimer<=0){comboCount=0;comboMultiplier=1;comboTimer=0;}}
+    // Score = meters + coinScore
+    score=Math.floor(meters)+coinScore;
     document.getElementById('score-val').textContent=score;document.getElementById('meter-val').textContent=Math.floor(meters);
     document.getElementById('speed-val').textContent=Math.floor(eSpd/SPD0*3);
+    // Combo bar update
+    const cWrap=document.getElementById('combo-wrap'),cBar=document.getElementById('combo-bar'),cMult=document.getElementById('combo-mult');
+    if(comboTimer>0){
+      cWrap.classList.add('active');
+      // Bar shows timer countdown (how long until combo drops)
+      const timePct=Math.max(0,comboTimer/COMBO_DUR)*100;
+      cBar.style.width=timePct+'%';
+      cBar.style.background=timePct>60?'#22ff88':timePct>30?'#ffcc00':'#ff3344';
+      // Show fill progress toward next multiplier
+      const fillProg=comboCount%COMBO_FILL;
+      const dots=fillProg>0?(' '+'\u25CF'.repeat(fillProg)+'\u25CB'.repeat(COMBO_FILL-fillProg)):'';
+      cMult.textContent='x'+comboMultiplier+dots;
+      cMult.className=comboMultiplier>=10?'max':comboMultiplier>=5?'high':'';
+    } else {
+      cWrap.classList.remove('active');
+    }
     const wInd=document.getElementById('wave-ind');
     if(wavePhase==='rest'){wInd.textContent='— BREATHER —';wInd.className='rest';}
     else{wInd.textContent='';wInd.className='action';}
@@ -1907,11 +2008,24 @@ function loop(){
     }
   }
   ship.position.y=SHIP_Y0+jumpY+Math.sin(elapsed*3.5)*.04;
-  ship.rotation.z+=((targetX-ship.position.x)*.18-ship.rotation.z)*dt*10;
+  // Barrel roll spin update
+  if(spinActive){
+    spinTimer-=dt;
+    const prog=1-Math.max(0,spinTimer)/SPIN_DUR; // 0→1
+    spinAngle=prog*Math.PI*2; // full 360
+    ship.rotation.z=spinAngle;
+    if(spinTimer<=0){
+      spinActive=false;spinTimer=0;spinAngle=0;
+      // Reset rotation to rest value so it doesn't unwind
+      ship.rotation.z=(targetX-ship.position.x)*.18;
+    }
+  } else {
+    ship.rotation.z+=((targetX-ship.position.x)*.18-ship.rotation.z)*dt*10;
+  }
   ship.scale.y+=(((ducking?.45:1))-ship.scale.y)*dt*12;
   let pitch=0;
   if(onRamp) pitch=-.08;else if(jumping){pitch=jumpPhase==='rise'?-.2:jumpPhase==='float'?-.05:.15;}else if(ducking) pitch=.1;
-  ship.rotation.x+=(pitch-ship.rotation.x)*dt*8;
+  if(!spinActive) ship.rotation.x+=(pitch-ship.rotation.x)*dt*8;
   if(landWobble>0){landWobble-=dt*4;if(landWobble<0)landWobble=0;ship.rotation.x+=Math.sin(landWobble*12)*landWobble*.15;ship.rotation.z+=Math.sin(landWobble*15+1)*landWobble*.08;}
   // Emit engine trail particles (from world position of engines)
   if(gs==='playing'){
@@ -1928,6 +2042,12 @@ function loop(){
     // Emit particles from engine positions
     const wx=ship.position.x, wy=ship.position.y, wz=ship.position.z;
     emitTrail(wx, wy, wz, boostActive);
+    // Spin spiral trail
+    if(spinActive){
+      const sa=spinAngle*3; // faster spiral
+      emitSparks(wx+Math.cos(sa)*.8,wy+Math.sin(sa)*.8,SHIP_Z,3);
+      emitSparks(wx-Math.cos(sa)*.8,wy-Math.sin(sa)*.8,SHIP_Z,2);
+    }
   }
   updateTrail();
   // ── Animate ship effects ──

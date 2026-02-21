@@ -6,6 +6,13 @@
 - Gör väggarna ännu djupare (20-30 units) för maximal "whoosh"-känsla
 - Förhindra att nya hinder spawnar direkt efter väggar — spelaren ser inte vad som är bakom. Lägg till en "safe zone" (15-20 units) efter varje WALL_GATE där inga obstacles spawnar
 
+### Wall Gate Whoosh — 3-fas tunnelljud
+- **Fas 1: Ingång** — kort attack-whoosh vid tunnelns kant
+- **Fas 2: Tunnel** — ihållande vindbrus/resonans medan man är mellan väggarna
+- **Fas 3: Utgång** — release-whoosh med pitch-shift uppåt vid utgång
+- Allt sker extremt snabbt — anpassa durationer efter vägg-djup och hastighet
+- Nuvarande whoosh spelas bara vid ingång — behöver utökas till fullständig 3-fas-upplevelse
+
 ### Tydligare Lanes i Marken
 - Neon-ränder längs varje lane-gräns i tunnelgolvet
 - Pulsande ljusvågor som rör sig bakåt längs lane-linjerna (speed-synkade)
