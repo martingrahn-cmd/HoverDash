@@ -1168,22 +1168,7 @@ function mkRamp(){
   const tg=new THREE.Mesh(new THREE.PlaneBufferGeometry(bw*.8,bl-2),
     new THREE.MeshBasicMaterial({color:C.gold,transparent:true,opacity:.06}));
   tg.rotation.x=-Math.PI/2;tg.position.set(0,bh+.01,-bl/2+1.9);g.add(tg);
-  // SLOPE ARROWS — large stack, very visible
-  for(let ai=0;ai<4;ai++){
-    const ay=bh+.35+ai*.55;
-    const az=2.5-ai*.2;
-    const r=.28-.04*ai, h=.52;
-    const aM=new THREE.Mesh(new THREE.ConeBufferGeometry(r,h,4),
-      new THREE.MeshBasicMaterial({color:C.gold,transparent:true,opacity:.85-.1*ai}));
-    aM.position.set(0,ay,az);g.add(aM);
-    const aL=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.ConeBufferGeometry(r,h,4)),
-      new THREE.LineBasicMaterial({color:C.white,transparent:true,opacity:.6}));
-    aL.position.set(0,ay,az);g.add(aL);
-  }
-  // Big "JUMP!" text indicator — glowing plane
-  const jpGlow=new THREE.Mesh(new THREE.PlaneBufferGeometry(bw*.9,1.6),
-    new THREE.MeshBasicMaterial({color:C.gold,transparent:true,opacity:.12,side:THREE.DoubleSide}));
-  jpGlow.rotation.x=-Math.PI/2;jpGlow.position.set(0,bh+2.8,-bl/2+3);g.add(jpGlow);
+  // (arrows and JUMP text removed — ramp is clear enough visually)
   // FLOOR REFLECTION
   const fr=new THREE.Mesh(new THREE.PlaneBufferGeometry(bw+.5,bl+2),
     new THREE.MeshBasicMaterial({color:C.gold,transparent:true,opacity:.06}));
@@ -1373,7 +1358,7 @@ function spawnO(){
   } else {
     o.position.set((lane-1)*LW,0,SPAWN_Z);o.userData.active=true;o.userData.lane=lane;o.userData.lanes=[lane];
   }
-  o.userData.mt=0;o.userData.whooshPlayed=false;o.visible=true;aObs.push(o);
+  o.userData.mt=0;o.userData.whooshPlayed=false;o.userData.whooshExited=false;o.visible=true;aObs.push(o);
 }
 function spawnC(){
   const o=gp(colPool);if(!o) return;
@@ -1409,10 +1394,10 @@ function collide(){
   if(onRamp&&rampRef){
     const relZ=SHIP_Z-rampRef.position.z;
     if(relZ<1-RAMP_LEN-1||relZ>slopeFront+1||!rampRef.userData.active){
-      onRamp=false;rampRef=null;jumping=true;jumpPhase='fall';jumpVelY=0;
+      onRamp=false;rampRef=null;jumping=true;jumpPhase='fall';jumpVelY=0;stopGrindSFX();
     } else if(!rampRef.userData.lanes.includes(curLane)){
       // Lane change exit — gentle side-fall, no upward velocity
-      onRamp=false;rampRef=null;jumping=true;jumpPhase='fall';jumpVelY=-2;
+      onRamp=false;rampRef=null;jumping=true;jumpPhase='fall';jumpVelY=-2;stopGrindSFX();
     } else {
       coinScore+=Math.ceil(30*dt);
       // Speed boost while on ramp!
@@ -1432,11 +1417,11 @@ function collide(){
         if(onRamp&&rampRef===o) continue;
         if(!air&&!onRamp&&!jumping&&relZ>=1&&relZ<=slopeFront+.5){
           onRamp=true;rampRef=o;jumpY=RAMP_H*Math.max(0,Math.min(1,(slopeFront-relZ)/slopeLen));
-          jumping=false;jumpPhase='none';jumpVelY=0;landShake=.05;showBonus('🚀 ON THE RAMP!');continue;
+          jumping=false;jumpPhase='none';jumpVelY=0;landShake=.05;showBonus('🚀 ON THE RAMP!');startGrindSFX();continue;
         }
         if(air&&jumpY>=RAMP_H*.4&&jumpY<RAMP_H+2.5&&relZ<1&&relZ>1-RAMP_LEN){
           onRamp=true;rampRef=o;jumping=false;jumpPhase='none';jumpVelY=0;jumpY=RAMP_H;
-          landShake=.1;landWobble=.3;showBonus('🚀 ON THE RAMP!');continue;
+          landShake=.1;landWobble=.3;showBonus('🚀 ON THE RAMP!');startGrindSFX();continue;
         }
         // Side/body approach: ship passes under the ramp body at ground level
         // Only the front slope (handled above) or landing from air allows getting on top
@@ -1497,9 +1482,9 @@ function collide(){
 }
 
 function activatePU(t){
-  if(t===PU.SHIELD){shieldActive=true;shieldTimer=SHIELD_DUR;shieldBubble.visible=true;document.getElementById('pu-shield').classList.add('active');showBonus('SHIELD!');}
-  else if(t===PU.MAGNET){magnetActive=true;magnetTimer=MAGNET_DUR;document.getElementById('pu-magnet').classList.add('active');showBonus('MAGNET!');}
-  else{boostActive=true;boostTimer=BOOST_DUR;boostSpd=BOOST_SPD;boostBubble.visible=true;document.getElementById('pu-boost').classList.add('active');showBonus('BOOST!');}
+  if(t===PU.SHIELD){shieldActive=true;shieldTimer=SHIELD_DUR;shieldBubble.visible=true;document.getElementById('pu-shield').classList.add('active');showBonus('SHIELD!');playShieldSFX();}
+  else if(t===PU.MAGNET){magnetActive=true;magnetTimer=MAGNET_DUR;document.getElementById('pu-magnet').classList.add('active');showBonus('MAGNET!');playMagnetSFX();}
+  else{boostActive=true;boostTimer=BOOST_DUR;boostSpd=BOOST_SPD;boostBubble.visible=true;document.getElementById('pu-boost').classList.add('active');showBonus('BOOST!');playBoostSFX();}
 }
 function updatePU(){
   if(shieldActive){shieldTimer-=dt;shieldBubble.material.opacity=.1+Math.sin(elapsed*6)*.06;if(shieldTimer<=0){shieldActive=false;shieldBubble.visible=false;document.getElementById('pu-shield').classList.remove('active');}}
@@ -1514,7 +1499,7 @@ const GRAV=14,FLOAT_GRAV=3.5;
 function doJump(){
   if(gs!=='playing'&&gs!=='countdown') return;
   if(onRamp){
-    onRamp=false;rampRef=null;jumping=true;jumpPhase='rise';jumpVelY=12;
+    onRamp=false;rampRef=null;jumping=true;jumpPhase='rise';jumpVelY=12;stopGrindSFX();
     launchCD=0.5;hasDoubleJump=true; // ramp launch allows double jump too
     showBonus('+50 LAUNCH!');coinScore+=50;
     emitSparks(ship.position.x,SHIP_Y0+RAMP_H,SHIP_Z,25);
@@ -1524,7 +1509,7 @@ function doJump(){
   if(jumping&&hasDoubleJump&&!spinActive){
     hasDoubleJump=false;spinActive=true;spinTimer=SPIN_DUR;spinAngle=0;
     jumpVelY=SPIN_BOOST;jumpPhase='rise'; // small upward kick
-    coinScore+=15;showBonus('+15 SPIN!');screenShake=.08;
+    coinScore+=15;showBonus('+15 SPIN!');screenShake=.08;playSpinSFX();
     if(comboTimer>0) comboTimer=Math.min(COMBO_DUR,comboTimer+0.3);
     emitSparks(ship.position.x,ship.position.y,SHIP_Z,12);
     return;
@@ -1558,6 +1543,7 @@ function togglePause(){
   if(paused){
     po.classList.add('show');
     pb.textContent='\u25B6';
+    if(activeTunnelSound) stopTunnelWhoosh();if(activeGrindSound) stopGrindSFX();
     if(musicPlaying){musicWasPlaying=true;stopMusic();musicPlaying=false;}
     else{musicWasPlaying=false;}
     clock.stop();
@@ -1571,6 +1557,7 @@ function togglePause(){
 
 function die(){
   gs='dead';screenShake=.4;
+  if(activeTunnelSound) stopTunnelWhoosh();if(activeGrindSound) stopGrindSFX();
   emitDeathExplosion(ship.position.x,ship.position.y,SHIP_Z);
   const m=Math.floor(meters);
   const finalScore=m+coinScore;
@@ -1683,45 +1670,318 @@ function initAudio(){
   freqData=new Uint8Array(analyser.frequencyBinCount);
 }
 
-// ── SFX: synthesised whoosh for wall gates ──
-let whooshBuf=null;
-function ensureWhooshBuf(){
-  if(whooshBuf||!audioCtx) return;
-  const dur=0.6,len=audioCtx.sampleRate*dur|0;
-  whooshBuf=audioCtx.createBuffer(1,len,audioCtx.sampleRate);
-  const d=whooshBuf.getChannelData(0);
+// ── SFX: 3-phase tunnel whoosh for wall gates ──
+// Phase 1: Entry whoosh (quick attack burst)
+// Phase 2: Tunnel sustain (wind resonance while inside)
+// Phase 3: Exit whoosh (pitch-up release)
+let noiseBuf=null;
+function ensureNoiseBuf(){
+  if(noiseBuf||!audioCtx) return;
+  const len=audioCtx.sampleRate*2|0; // 2s buffer, loopable for sustain
+  noiseBuf=audioCtx.createBuffer(1,len,audioCtx.sampleRate);
+  const d=noiseBuf.getChannelData(0);
   for(let i=0;i<len;i++) d[i]=Math.random()*2-1;
 }
-function playWhoosh(vol){
+// Active tunnel sound state per wall gate
+let activeTunnelSound=null;
+function startTunnelWhoosh(vol){
   if(!audioCtx) initAudio();
   audioCtx.resume();
-  ensureWhooshBuf();
-  const t=audioCtx.currentTime,dur=0.45;
-  const src=audioCtx.createBufferSource();
-  src.buffer=whooshBuf;
-  // Low band – body of the whoosh
-  const lo=audioCtx.createBiquadFilter();
-  lo.type='bandpass';lo.Q.value=0.5;
-  lo.frequency.setValueAtTime(600,t);
-  lo.frequency.exponentialRampToValueAtTime(120,t+dur);
-  // High band – airy top
-  const hi=audioCtx.createBiquadFilter();
-  hi.type='highpass';hi.Q.value=0.3;
-  hi.frequency.setValueAtTime(2000,t);
-  hi.frequency.exponentialRampToValueAtTime(800,t+dur);
-  const gLo=audioCtx.createGain();
-  const gHi=audioCtx.createGain();
+  ensureNoiseBuf();
+  stopTunnelWhoosh(); // clean up any previous
+  const t=audioCtx.currentTime;
   const v=Math.min(vol*3,1.0);
-  gLo.gain.setValueAtTime(0.001,t);
-  gLo.gain.linearRampToValueAtTime(v,t+0.03);
-  gLo.gain.setValueAtTime(v,t+dur*0.2);
-  gLo.gain.exponentialRampToValueAtTime(0.001,t+dur);
-  gHi.gain.setValueAtTime(0.001,t);
-  gHi.gain.linearRampToValueAtTime(v*0.5,t+0.02);
-  gHi.gain.exponentialRampToValueAtTime(0.001,t+dur*0.6);
-  src.connect(lo);lo.connect(gLo);gLo.connect(audioCtx.destination);
-  src.connect(hi);hi.connect(gHi);gHi.connect(audioCtx.destination);
+  // ── Phase 1: Entry burst ──
+  const entrySrc=audioCtx.createBufferSource();
+  entrySrc.buffer=noiseBuf;
+  const entryBP=audioCtx.createBiquadFilter();
+  entryBP.type='bandpass';entryBP.Q.value=0.6;
+  entryBP.frequency.setValueAtTime(1200,t);
+  entryBP.frequency.exponentialRampToValueAtTime(400,t+0.08);
+  const entryG=audioCtx.createGain();
+  entryG.gain.setValueAtTime(0.001,t);
+  entryG.gain.linearRampToValueAtTime(v*0.9,t+0.015);
+  entryG.gain.exponentialRampToValueAtTime(v*0.15,t+0.1);
+  entrySrc.connect(entryBP);entryBP.connect(entryG);entryG.connect(audioCtx.destination);
+  entrySrc.start(t);entrySrc.stop(t+0.12);
+  // ── Phase 2: Tunnel sustain (looping wind resonance) ──
+  const sustainSrc=audioCtx.createBufferSource();
+  sustainSrc.buffer=noiseBuf;sustainSrc.loop=true;
+  // Dark rumble — subway passing feel (speaker-friendly freqs)
+  const susLo=audioCtx.createBiquadFilter();
+  susLo.type='bandpass';susLo.Q.value=1.5;
+  susLo.frequency.value=250;
+  // Mid body — muffled roar
+  const susMid=audioCtx.createBiquadFilter();
+  susMid.type='bandpass';susMid.Q.value=0.8;
+  susMid.frequency.value=450;
+  const susGLo=audioCtx.createGain();
+  const susGMid=audioCtx.createGain();
+  const sustainVol=v*0.8;
+  // Fade in quickly after entry
+  susGLo.gain.setValueAtTime(0.001,t);
+  susGLo.gain.linearRampToValueAtTime(sustainVol,t+0.04);
+  susGMid.gain.setValueAtTime(0.001,t);
+  susGMid.gain.linearRampToValueAtTime(sustainVol*0.5,t+0.04);
+  sustainSrc.connect(susLo);susLo.connect(susGLo);susGLo.connect(audioCtx.destination);
+  sustainSrc.connect(susMid);susMid.connect(susGMid);susGMid.connect(audioCtx.destination);
+  sustainSrc.start(t+0.03);
+  activeTunnelSound={sustainSrc,susGLo,susGMid,vol:v};
+}
+function stopTunnelWhoosh(){
+  if(!activeTunnelSound||!audioCtx) return;
+  const s=activeTunnelSound;activeTunnelSound=null;
+  const t=audioCtx.currentTime;
+  const v=s.vol;
+  // Fade out sustain
+  try{
+    s.susGLo.gain.cancelScheduledValues(t);
+    s.susGMid.gain.cancelScheduledValues(t);
+    s.susGLo.gain.setValueAtTime(s.susGLo.gain.value,t);
+    s.susGMid.gain.setValueAtTime(s.susGMid.gain.value,t);
+    s.susGLo.gain.exponentialRampToValueAtTime(0.001,t+0.05);
+    s.susGMid.gain.exponentialRampToValueAtTime(0.001,t+0.05);
+    s.sustainSrc.stop(t+0.06);
+  }catch(e){}
+  // ── Phase 3: Exit whoosh (pitch-up burst) ──
+  ensureNoiseBuf();
+  const exitSrc=audioCtx.createBufferSource();
+  exitSrc.buffer=noiseBuf;
+  const exitBP=audioCtx.createBiquadFilter();
+  exitBP.type='bandpass';exitBP.Q.value=0.5;
+  exitBP.frequency.setValueAtTime(300,t);
+  exitBP.frequency.exponentialRampToValueAtTime(1400,t+0.1);
+  const exitHi=audioCtx.createBiquadFilter();
+  exitHi.type='highpass';exitHi.Q.value=0.3;
+  exitHi.frequency.setValueAtTime(800,t);
+  exitHi.frequency.exponentialRampToValueAtTime(2500,t+0.1);
+  const exitG=audioCtx.createGain();
+  const exitGHi=audioCtx.createGain();
+  exitG.gain.setValueAtTime(v*0.7,t);
+  exitG.gain.exponentialRampToValueAtTime(0.001,t+0.12);
+  exitGHi.gain.setValueAtTime(v*0.35,t);
+  exitGHi.gain.exponentialRampToValueAtTime(0.001,t+0.08);
+  exitSrc.connect(exitBP);exitBP.connect(exitG);exitG.connect(audioCtx.destination);
+  exitSrc.connect(exitHi);exitHi.connect(exitGHi);exitGHi.connect(audioCtx.destination);
+  exitSrc.start(t);exitSrc.stop(t+0.15);
+}
+
+// ── SFX: barrel roll spin sound ──
+function playSpinSFX(){
+  if(!audioCtx) initAudio();
+  audioCtx.resume();
+  ensureNoiseBuf();
+  const t=audioCtx.currentTime,dur=SPIN_DUR;
+  // Layer 1: Deep tonal sweep (heavy mechanical spin)
+  const osc=audioCtx.createOscillator();
+  osc.type='sawtooth';
+  osc.frequency.setValueAtTime(70,t);
+  osc.frequency.exponentialRampToValueAtTime(220,t+dur*0.7);
+  osc.frequency.exponentialRampToValueAtTime(140,t+dur);
+  const oscG=audioCtx.createGain();
+  oscG.gain.setValueAtTime(0.001,t);
+  oscG.gain.linearRampToValueAtTime(0.35,t+0.03);
+  oscG.gain.setValueAtTime(0.35,t+dur*0.6);
+  oscG.gain.exponentialRampToValueAtTime(0.001,t+dur);
+  const oscLP=audioCtx.createBiquadFilter();
+  oscLP.type='lowpass';oscLP.Q.value=1.5;
+  oscLP.frequency.setValueAtTime(250,t);
+  oscLP.frequency.exponentialRampToValueAtTime(500,t+dur);
+  osc.connect(oscLP);oscLP.connect(oscG);oscG.connect(audioCtx.destination);
+  osc.start(t);osc.stop(t+dur);
+  // Layer 2: Dark noise whoosh — heavy turbulence
+  const src=audioCtx.createBufferSource();
+  src.buffer=noiseBuf;
+  const bp=audioCtx.createBiquadFilter();
+  bp.type='bandpass';bp.Q.value=0.7;
+  bp.frequency.setValueAtTime(300,t);
+  bp.frequency.exponentialRampToValueAtTime(700,t+dur*0.5);
+  bp.frequency.exponentialRampToValueAtTime(250,t+dur);
+  const nG=audioCtx.createGain();
+  nG.gain.setValueAtTime(0.001,t);
+  nG.gain.linearRampToValueAtTime(0.6,t+0.02);
+  nG.gain.setValueAtTime(0.6,t+dur*0.5);
+  nG.gain.exponentialRampToValueAtTime(0.001,t+dur);
+  src.connect(bp);bp.connect(nG);nG.connect(audioCtx.destination);
   src.start(t);src.stop(t+dur);
+}
+
+// ── SFX: power-up pickup sounds ──
+function playShieldSFX(){
+  if(!audioCtx) initAudio();
+  audioCtx.resume();
+  const t=audioCtx.currentTime;
+  // Shimmering chime — two detuned high sines + a bell harmonic
+  const f=[880,1320,1760];
+  const detune=[0,7,-5];
+  for(let i=0;i<3;i++){
+    const osc=audioCtx.createOscillator();
+    osc.type='sine';osc.frequency.value=f[i];osc.detune.value=detune[i];
+    const g=audioCtx.createGain();
+    const v=i===0?0.3:i===1?0.2:0.12;
+    const d=i===0?0.5:i===1?0.4:0.35;
+    g.gain.setValueAtTime(0.001,t);
+    g.gain.linearRampToValueAtTime(v,t+0.01);
+    g.gain.exponentialRampToValueAtTime(0.001,t+d);
+    osc.connect(g);g.connect(audioCtx.destination);
+    osc.start(t+i*0.04);osc.stop(t+d+0.01);
+  }
+  // Metallic shimmer noise layer
+  ensureNoiseBuf();
+  const src=audioCtx.createBufferSource();src.buffer=noiseBuf;
+  const bp=audioCtx.createBiquadFilter();
+  bp.type='bandpass';bp.Q.value=3;bp.frequency.value=3500;
+  const nG=audioCtx.createGain();
+  nG.gain.setValueAtTime(0.001,t);
+  nG.gain.linearRampToValueAtTime(0.08,t+0.01);
+  nG.gain.exponentialRampToValueAtTime(0.001,t+0.3);
+  src.connect(bp);bp.connect(nG);nG.connect(audioCtx.destination);
+  src.start(t);src.stop(t+0.35);
+}
+
+function playBoostSFX(){
+  if(!audioCtx) initAudio();
+  audioCtx.resume();
+  ensureNoiseBuf();
+  const t=audioCtx.currentTime,dur=0.6;
+  // Rocket ignition — rising low noise burst
+  const src=audioCtx.createBufferSource();src.buffer=noiseBuf;
+  const lp=audioCtx.createBiquadFilter();
+  lp.type='lowpass';lp.Q.value=2;
+  lp.frequency.setValueAtTime(200,t);
+  lp.frequency.exponentialRampToValueAtTime(800,t+0.1);
+  lp.frequency.setValueAtTime(800,t+0.15);
+  lp.frequency.exponentialRampToValueAtTime(400,t+dur);
+  const g=audioCtx.createGain();
+  g.gain.setValueAtTime(0.001,t);
+  g.gain.linearRampToValueAtTime(0.7,t+0.04);
+  g.gain.setValueAtTime(0.7,t+0.15);
+  g.gain.exponentialRampToValueAtTime(0.15,t+dur);
+  src.connect(lp);lp.connect(g);g.connect(audioCtx.destination);
+  src.start(t);src.stop(t+dur);
+  // Tonal thrust — sub oscillator
+  const osc=audioCtx.createOscillator();
+  osc.type='sawtooth';
+  osc.frequency.setValueAtTime(60,t);
+  osc.frequency.exponentialRampToValueAtTime(120,t+0.1);
+  osc.frequency.setValueAtTime(120,t+0.15);
+  osc.frequency.exponentialRampToValueAtTime(80,t+dur);
+  const oG=audioCtx.createGain();
+  const oLP=audioCtx.createBiquadFilter();
+  oLP.type='lowpass';oLP.Q.value=1;oLP.frequency.value=300;
+  oG.gain.setValueAtTime(0.001,t);
+  oG.gain.linearRampToValueAtTime(0.35,t+0.04);
+  oG.gain.exponentialRampToValueAtTime(0.001,t+dur);
+  osc.connect(oLP);oLP.connect(oG);oG.connect(audioCtx.destination);
+  osc.start(t);osc.stop(t+dur);
+}
+
+function playMagnetSFX(){
+  if(!audioCtx) initAudio();
+  audioCtx.resume();
+  const t=audioCtx.currentTime,dur=0.45;
+  // Electric zap — fast square wave chirp
+  const osc=audioCtx.createOscillator();
+  osc.type='square';
+  osc.frequency.setValueAtTime(120,t);
+  osc.frequency.exponentialRampToValueAtTime(600,t+0.05);
+  osc.frequency.exponentialRampToValueAtTime(200,t+0.12);
+  osc.frequency.setValueAtTime(200,t+0.15);
+  osc.frequency.exponentialRampToValueAtTime(350,t+dur);
+  const oG=audioCtx.createGain();
+  oG.gain.setValueAtTime(0.001,t);
+  oG.gain.linearRampToValueAtTime(0.25,t+0.01);
+  oG.gain.exponentialRampToValueAtTime(0.08,t+0.12);
+  oG.gain.setValueAtTime(0.08,t+0.15);
+  oG.gain.exponentialRampToValueAtTime(0.001,t+dur);
+  const bp=audioCtx.createBiquadFilter();
+  bp.type='bandpass';bp.Q.value=1.5;
+  bp.frequency.setValueAtTime(250,t);
+  bp.frequency.exponentialRampToValueAtTime(700,t+dur);
+  osc.connect(bp);bp.connect(oG);oG.connect(audioCtx.destination);
+  osc.start(t);osc.stop(t+dur);
+  // Electric crackle — noise burst
+  ensureNoiseBuf();
+  const src=audioCtx.createBufferSource();src.buffer=noiseBuf;
+  const hp=audioCtx.createBiquadFilter();
+  hp.type='highpass';hp.Q.value=1;hp.frequency.value=2000;
+  const nG=audioCtx.createGain();
+  nG.gain.setValueAtTime(0.001,t);
+  nG.gain.linearRampToValueAtTime(0.15,t+0.01);
+  nG.gain.exponentialRampToValueAtTime(0.04,t+0.08);
+  // Crackling pulses
+  nG.gain.setValueAtTime(0.12,t+0.1);
+  nG.gain.exponentialRampToValueAtTime(0.03,t+0.18);
+  nG.gain.setValueAtTime(0.1,t+0.22);
+  nG.gain.exponentialRampToValueAtTime(0.001,t+dur);
+  src.connect(hp);hp.connect(nG);nG.connect(audioCtx.destination);
+  src.start(t);src.stop(t+dur);
+}
+
+// ── SFX: ramp grind (skateboard rail grind) ──
+let activeGrindSound=null;
+function startGrindSFX(){
+  if(!audioCtx) initAudio();
+  audioCtx.resume();
+  ensureNoiseBuf();
+  stopGrindSFX();
+  const t=audioCtx.currentTime;
+  // Entry scrape — short metallic attack
+  const eSrc=audioCtx.createBufferSource();eSrc.buffer=noiseBuf;
+  const eBP=audioCtx.createBiquadFilter();
+  eBP.type='bandpass';eBP.Q.value=3;
+  eBP.frequency.setValueAtTime(2500,t);
+  eBP.frequency.exponentialRampToValueAtTime(1200,t+0.08);
+  const eG=audioCtx.createGain();
+  eG.gain.setValueAtTime(0.001,t);
+  eG.gain.linearRampToValueAtTime(0.4,t+0.01);
+  eG.gain.exponentialRampToValueAtTime(0.05,t+0.1);
+  eSrc.connect(eBP);eBP.connect(eG);eG.connect(audioCtx.destination);
+  eSrc.start(t);eSrc.stop(t+0.12);
+  // Sustain — looping metallic scrape texture
+  const sus=audioCtx.createBufferSource();sus.buffer=noiseBuf;sus.loop=true;
+  // Gritty mid-range scrape
+  const sBP1=audioCtx.createBiquadFilter();
+  sBP1.type='bandpass';sBP1.Q.value=2.5;sBP1.frequency.value=1800;
+  // Low rumble from rail contact
+  const sBP2=audioCtx.createBiquadFilter();
+  sBP2.type='bandpass';sBP2.Q.value=1.2;sBP2.frequency.value=350;
+  const sG1=audioCtx.createGain();
+  const sG2=audioCtx.createGain();
+  sG1.gain.setValueAtTime(0.001,t);
+  sG1.gain.linearRampToValueAtTime(0.25,t+0.06);
+  sG2.gain.setValueAtTime(0.001,t);
+  sG2.gain.linearRampToValueAtTime(0.3,t+0.06);
+  sus.connect(sBP1);sBP1.connect(sG1);sG1.connect(audioCtx.destination);
+  sus.connect(sBP2);sBP2.connect(sG2);sG2.connect(audioCtx.destination);
+  sus.start(t+0.04);
+  activeGrindSound={sus,sG1,sG2};
+}
+function stopGrindSFX(){
+  if(!activeGrindSound||!audioCtx) return;
+  const s=activeGrindSound;activeGrindSound=null;
+  const t=audioCtx.currentTime;
+  try{
+    s.sG1.gain.cancelScheduledValues(t);
+    s.sG2.gain.cancelScheduledValues(t);
+    s.sG1.gain.setValueAtTime(s.sG1.gain.value,t);
+    s.sG2.gain.setValueAtTime(s.sG2.gain.value,t);
+    s.sG1.gain.exponentialRampToValueAtTime(0.001,t+0.04);
+    s.sG2.gain.exponentialRampToValueAtTime(0.001,t+0.04);
+    s.sus.stop(t+0.05);
+  }catch(e){}
+  // Exit scrape — short bright burst
+  ensureNoiseBuf();
+  const xSrc=audioCtx.createBufferSource();xSrc.buffer=noiseBuf;
+  const xBP=audioCtx.createBiquadFilter();
+  xBP.type='bandpass';xBP.Q.value=2;
+  xBP.frequency.setValueAtTime(1000,t);
+  xBP.frequency.exponentialRampToValueAtTime(3000,t+0.08);
+  const xG=audioCtx.createGain();
+  xG.gain.setValueAtTime(0.3,t);
+  xG.gain.exponentialRampToValueAtTime(0.001,t+0.1);
+  xSrc.connect(xBP);xBP.connect(xG);xG.connect(audioCtx.destination);
+  xSrc.start(t);xSrc.stop(t+0.12);
 }
 
 // ── AUDIO: iOS-compatible BufferSource + analyser ──
@@ -1939,15 +2199,23 @@ function loop(){
             rl.mesh.material.opacity=.1+wave*.6;
           }
         }
-        // Whoosh SFX when ship enters wall gate
-        if(!o.userData.whooshPlayed&&o.position.z+12.5>=SHIP_Z){
+        // 3-phase tunnel whoosh SFX
+        const wallFront=o.position.z+12.5; // front edge of wall
+        const wallBack=o.position.z-12.5;  // back edge of wall
+        // Phase 1+2: Entry — start tunnel sound when front edge reaches ship
+        if(!o.userData.whooshPlayed&&wallFront>=SHIP_Z){
           o.userData.whooshPlayed=true;
           const spdFrac=Math.min((spd-SPD0)/(SPD_MAX-SPD0),1);
-          playWhoosh(.12+spdFrac*.2);
+          startTunnelWhoosh(.12+spdFrac*.2);
+        }
+        // Phase 3: Exit — stop tunnel sound (triggers exit burst) when back edge passes ship
+        if(o.userData.whooshPlayed&&!o.userData.whooshExited&&wallBack>=SHIP_Z){
+          o.userData.whooshExited=true;
+          stopTunnelWhoosh();
         }
       }
       const dz=o.userData.type===OT.RAMP?DESPAWN_Z+RAMP_LEN+2:o.userData.type===OT.WALL_GATE?DESPAWN_Z+16:DESPAWN_Z;
-      if(o.position.z>dz){if(onRamp&&rampRef===o){onRamp=false;rampRef=null;jumping=true;jumpPhase='fall';jumpVelY=0;}rp(o);aObs.splice(i,1);}
+      if(o.position.z>dz){if(onRamp&&rampRef===o){onRamp=false;rampRef=null;jumping=true;jumpPhase='fall';jumpVelY=0;stopGrindSFX();}rp(o);aObs.splice(i,1);}
     }
     for(let i=aCol.length-1;i>=0;i--){const c=aCol[i];c.position.z+=eSpd*dt;for(const ch of c.children) ch.rotation.y+=dt*3;if(c.position.z>DESPAWN_Z){rp(c);aCol.splice(i,1);}}
     for(let i=aPU.length-1;i>=0;i--){const p=aPU[i];p.position.z+=eSpd*dt;for(const ch of p.children) ch.rotation.y+=dt*2;if(p.position.z>DESPAWN_Z){rp(p);aPU.splice(i,1);}}
