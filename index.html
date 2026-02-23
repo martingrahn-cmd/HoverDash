@@ -45,7 +45,6 @@
   #pause-btn{position:fixed;top:12px;right:12px;width:40px;height:40px;display:flex;align-items:center;justify-content:center;font-size:18px;color:#00e5ff;background:#0a0a1899;border:1px solid #00e5ff44;border-radius:6px;cursor:pointer;z-index:12;opacity:0;pointer-events:none;transition:opacity .3s}
   #pause-btn.show{opacity:.7;pointer-events:auto}
   #pause-btn:hover{opacity:1;background:#0a0a28}
-  #music-btn.playing{border-color:#44ff88;color:#44ff88;background:#051a08}
   #audio-input{display:none}
   #overlay{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:20;background:radial-gradient(ellipse at center,#050508cc 0%,#050508ee 70%)}
   #overlay.hidden{display:none}
@@ -54,10 +53,54 @@
   #final-score{font-size:22px;color:#fff;letter-spacing:2px;margin-bottom:6px;display:none}
   #final-coins{font-size:16px;color:#ffdd44;letter-spacing:2px;margin-bottom:6px;display:none}
   #best-score{font-size:14px;color:#00e5ff88;letter-spacing:2px;margin-bottom:30px;display:none}
-  #start-btn{padding:16px 48px;font-size:18px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:#050508;background:#00e5ff;border:none;cursor:pointer;transition:all .2s;clip-path:polygon(8px 0,100% 0,calc(100% - 8px) 100%,0 100%)}
-  #start-btn:hover{background:#fff;transform:scale(1.05)}
+  #start-btn,#menu-btn{padding:16px 48px;font-size:18px;font-weight:700;letter-spacing:4px;text-transform:uppercase;cursor:pointer;transition:all .2s;clip-path:polygon(8px 0,100% 0,calc(100% - 8px) 100%,0 100%);font-family:inherit;color:#00e5ff;background:transparent;border:2px solid #00e5ff}
+  #menu-btn{margin-top:10px}
+  #start-btn:hover,#menu-btn:hover{background:#fff;color:#050508;transform:scale(1.05)}
   #instructions{margin-top:24px;font-size:13px;color:#556;letter-spacing:1px;text-align:center;line-height:1.8}
   .kh{display:inline-block;background:#0a0a14;color:#00e5ff;padding:2px 8px;border-radius:3px;font-size:11px;border:1px solid #00e5ff44}
+  /* TAB BAR */
+  #tab-bar{display:flex;gap:0;margin-bottom:20px;border-bottom:2px solid #00e5ff33}
+  .tab-btn{padding:10px 28px;font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#556;background:transparent;border:none;border-bottom:2px solid transparent;cursor:pointer;transition:all .2s;margin-bottom:-2px;font-family:inherit}
+  .tab-btn:hover{color:#00e5ff88}
+  .tab-btn.active{color:#00e5ff;border-bottom-color:#00e5ff;text-shadow:0 0 10px #00e5ff44}
+  .tab-content{display:none;flex-direction:column;align-items:center;justify-content:center;width:100%}
+  .tab-content.active{display:flex}
+  /* TROPHIES */
+  #trophy-header{text-align:center;margin-bottom:12px}
+  #trophy-title{font-size:clamp(28px,6vw,42px);font-weight:900;color:#00e5ff;text-shadow:0 0 20px #00e5ff66;letter-spacing:4px}
+  #trophy-count{font-size:14px;color:#00e5ff88;letter-spacing:2px;margin-top:4px}
+  #trophy-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;max-height:58vh;overflow-y:auto;padding:8px;width:min(92vw,540px);scrollbar-width:thin;scrollbar-color:#00e5ff33 transparent}
+  .trophy-card{background:#0a0a1899;border:1px solid #ffffff11;border-radius:8px;padding:10px 8px;text-align:center;transition:all .3s;position:relative}
+  .trophy-card.unlocked.bronze{border-color:#cd7f3266;background:#cd7f3210}
+  .trophy-card.unlocked.silver{border-color:#c0c0c066;background:#c0c0c010}
+  .trophy-card.unlocked.gold{border-color:#ffd70066;background:#ffd70010}
+  .trophy-card.locked{opacity:.45;filter:grayscale(.7)}
+  .trophy-icon{font-size:26px;margin-bottom:4px}
+  .trophy-name{font-size:10px;font-weight:700;color:#fff;letter-spacing:1px;margin-bottom:2px}
+  .trophy-desc{font-size:9px;color:#889;line-height:1.3}
+  .trophy-tier{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px}
+  .trophy-tier.bronze{color:#cd7f32}.trophy-tier.silver{color:#c0c0c0}.trophy-tier.gold{color:#ffd700}
+  .trophy-progress{width:100%;height:3px;background:#ffffff0a;border-radius:2px;margin-top:6px;overflow:hidden}
+  .trophy-pbar{height:100%;border-radius:2px;transition:width .4s ease}
+  .trophy-pbar.bronze{background:#cd7f32}.trophy-pbar.silver{background:#c0c0c0}.trophy-pbar.gold{background:#ffd700}
+  .trophy-check{color:#44ff88;font-size:14px;position:absolute;top:4px;right:6px}
+  /* ACHIEVEMENT TOAST */
+  #achievement-toast{position:fixed;bottom:-80px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:12px;background:#0a0a18ee;border:1px solid #ffd70066;border-radius:8px;padding:10px 20px;z-index:30;transition:bottom .5s cubic-bezier(.34,1.56,.64,1);box-shadow:0 0 30px #ffd70033;pointer-events:none}
+  #achievement-toast.show{bottom:24px}
+  #ach-toast-icon{font-size:28px}
+  #ach-toast-label{font-size:9px;color:#ffd700;letter-spacing:3px;font-weight:700;text-transform:uppercase}
+  .ach-tier-label{font-size:9px;font-weight:700;letter-spacing:2px}
+  .ach-tier-label.bronze{color:#cd7f32}.ach-tier-label.silver{color:#c0c0c0}.ach-tier-label.gold{color:#ffd700}
+  #ach-toast-name{font-size:14px;color:#fff;font-weight:700;letter-spacing:1px}
+  /* SETTINGS */
+  #settings-title{font-size:clamp(28px,6vw,42px);font-weight:900;color:#00e5ff;text-shadow:0 0 20px #00e5ff66;letter-spacing:4px;margin-bottom:24px;text-align:center}
+  #settings-list{width:min(80vw,320px)}
+  .setting-row{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #ffffff11}
+  .setting-label{font-size:14px;font-weight:700;letter-spacing:3px;color:#aab}
+  .setting-toggle{padding:6px 20px;font-size:13px;font-weight:700;letter-spacing:2px;cursor:pointer;border-radius:3px;font-family:inherit;transition:all .2s;border:1px solid #ff445566;color:#ff4455;background:transparent}
+  .setting-toggle.on{border-color:#44ff8866;color:#44ff88}
+  /* MENU FOCUS */
+  .menu-focused{outline:none !important;box-shadow:0 0 0 3px #fff,0 0 20px #ffffffaa !important;transform:scale(1.08);background:#fff !important;color:#050508 !important;border-color:#fff !important}
 </style>
 </head>
 <body>
@@ -82,20 +125,45 @@
   <button id="pause-resume" onclick="togglePause()">RESUME</button>
   <div id="pause-hint"><span class="kh">P</span> / <span class="kh">ESC</span> to resume</div>
 </div>
+<div id="achievement-toast"><div id="ach-toast-icon"></div><div id="ach-toast-body"><div id="ach-toast-label">ACHIEVEMENT UNLOCKED</div><div id="ach-toast-tier" class="ach-tier-label bronze"></div><div id="ach-toast-name"></div></div></div>
 <div id="overlay">
-  <div id="game-title">HOVER<br>DASH</div>
-  <div id="game-subtitle">Lane Runner</div>
-  <div id="final-score"></div>
-  <div id="final-coins"></div>
-  <div id="best-score"></div>
-  <button id="music-btn" onclick="toggleMusic()" style="margin-bottom:12px;padding:8px 20px;font-size:13px;font-weight:700;letter-spacing:2px;color:#00e5ff;background:#0a0a18;border:1px solid #00e5ff44;cursor:pointer;border-radius:3px">♫ MUSIC: OFF</button>
-  <button id="start-btn">START</button>
-  <div id="instructions">
-    <span class="kh">A</span> <span class="kh">D</span> / <span class="kh">←</span> <span class="kh">→</span> Switch lanes<br>
-    <span class="kh">W</span> <span class="kh">↑</span> <span class="kh">SPACE</span> Jump · Hold to float<br>
-    <span class="kh">S</span> <span class="kh">↓</span> Duck · <span class="kh">P</span> <span class="kh">ESC</span> Pause<br>
-    Swipe on mobile<br>
-    <span style="font-size:11px;color:#334;letter-spacing:1px">Spaceship model CC0 by Quaternius</span>
+  <div id="tab-bar">
+    <button class="tab-btn active" data-tab="play">PLAY</button>
+    <button class="tab-btn" data-tab="trophies">TROPHIES</button>
+    <button class="tab-btn" data-tab="settings">SETTINGS</button>
+  </div>
+  <div id="tab-play" class="tab-content active">
+    <div id="game-title">HOVER<br>DASH</div>
+    <div id="game-subtitle">Lane Runner</div>
+    <div id="final-score"></div>
+    <div id="final-coins"></div>
+    <div id="best-score"></div>
+    <button id="start-btn">START</button>
+    <button id="menu-btn" style="display:none">MENU</button>
+    <div id="instructions">
+      <span class="kh">A</span> <span class="kh">D</span> / <span class="kh">←</span> <span class="kh">→</span> Switch lanes<br>
+      <span class="kh">W</span> <span class="kh">↑</span> <span class="kh">SPACE</span> Jump · Hold to float<br>
+      <span class="kh">S</span> <span class="kh">↓</span> Duck · <span class="kh">P</span> <span class="kh">ESC</span> Pause<br>
+      Swipe on mobile<br>
+      <span style="font-size:11px;color:#334;letter-spacing:1px">Spaceship model CC0 by Quaternius</span>
+    </div>
+  </div>
+  <div id="tab-trophies" class="tab-content">
+    <div id="trophy-header"><div id="trophy-title">TROPHIES</div><div id="trophy-count">0 / 30</div></div>
+    <div id="trophy-grid"></div>
+  </div>
+  <div id="tab-settings" class="tab-content">
+    <div id="settings-title">SETTINGS</div>
+    <div id="settings-list">
+      <div class="setting-row">
+        <span class="setting-label">MUSIC</span>
+        <button id="music-btn" class="setting-toggle" onclick="toggleMusic()">OFF</button>
+      </div>
+      <div class="setting-row">
+        <span class="setting-label">SFX</span>
+        <button id="sfx-btn" class="setting-toggle on" onclick="toggleSFX()">ON</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -152,6 +220,61 @@ const ZONES=[
 let curZone=0,zoneTimer=0;const ZONE_DUR=18;
 
 // ═══════════════════════════════════════════════════
+// ACHIEVEMENTS
+// ═══════════════════════════════════════════════════
+const ACHIEVEMENTS=[
+  // BRONZE (easy — first few sessions)
+  {id:'first_flight',name:'First Flight',desc:'Play your first game',tier:'bronze',icon:'\uD83D\uDEEB',check:'lifetime',stat:'totalGames',target:1},
+  {id:'getting_warmed_up',name:'Getting Warmed Up',desc:'Play 10 games',tier:'bronze',icon:'\uD83D\uDD25',check:'lifetime',stat:'totalGames',target:10},
+  {id:'hundred_club',name:'100 Club',desc:'Reach 100 meters',tier:'bronze',icon:'\uD83C\uDFC3',check:'endgame',stat:'meters',target:100},
+  {id:'coin_collector',name:'Coin Collector',desc:'Collect 100 coins in one game',tier:'bronze',icon:'\uD83E\uDE99',check:'endgame',stat:'coinScore',target:100},
+  {id:'shield_up',name:'Shield Up',desc:'Pick up 3 Shields in one game',tier:'bronze',icon:'\uD83D\uDEE1\uFE0F',check:'endgame',stat:'pgShieldsUsed',target:3},
+  {id:'magnet_hands',name:'Magnet Hands',desc:'Pick up 3 Magnets in one game',tier:'bronze',icon:'\uD83E\uDDF2',check:'endgame',stat:'pgMagnetsUsed',target:3},
+  {id:'nitro',name:'Nitro',desc:'Pick up 3 Boosts in one game',tier:'bronze',icon:'\u26A1',check:'endgame',stat:'pgBoostsUsed',target:3},
+  {id:'wave_rider',name:'Wave Rider',desc:'Clear Wave 3',tier:'bronze',icon:'\uD83C\uDF0A',check:'instant',stat:'waveNum',target:3},
+  {id:'close_call',name:'Close Call',desc:'Get 3 Near Misses in one game',tier:'bronze',icon:'\uD83D\uDE2C',check:'endgame',stat:'pgNearMisses',target:3},
+  {id:'pad_surfer',name:'Pad Surfer',desc:'Hit 3 Boost Pads in one game',tier:'bronze',icon:'\uD83C\uDFC4',check:'endgame',stat:'pgBoostPadsHit',target:3},
+  // SILVER (marathon — dedication over time)
+  {id:'veteran_pilot',name:'Veteran Pilot',desc:'Play 100 games',tier:'silver',icon:'\u2B50',check:'lifetime',stat:'totalGames',target:100},
+  {id:'addicted',name:'Addicted',desc:'Play 500 games',tier:'silver',icon:'\uD83C\uDFAE',check:'lifetime',stat:'totalGames',target:500},
+  {id:'one_k_runner',name:'1K Runner',desc:'Reach 2,000 meters',tier:'silver',icon:'\uD83D\uDE80',check:'endgame',stat:'meters',target:2000},
+  {id:'treasure_hunter',name:'Treasure Hunter',desc:'Collect 1,000 coins in one game',tier:'silver',icon:'\uD83D\uDCB0',check:'endgame',stat:'coinScore',target:1000},
+  {id:'coin_hoarder',name:'Coin Hoarder',desc:'Collect 25,000 coins total',tier:'silver',icon:'\uD83C\uDFE6',check:'lifetime',stat:'totalCoins',target:25000},
+  {id:'shield_wall',name:'Shield Wall',desc:'Pick up 100 Shields total',tier:'silver',icon:'\uD83E\uDDF1',check:'lifetime',stat:'totalShields',target:100},
+  {id:'magnet_master',name:'Magnet Master',desc:'Pick up 100 Magnets total',tier:'silver',icon:'\uD83E\uDDF2',check:'lifetime',stat:'totalMagnets',target:100},
+  {id:'boost_junkie',name:'Boost Junkie',desc:'Pick up 100 Boosts total',tier:'silver',icon:'\uD83D\uDD25',check:'lifetime',stat:'totalBoosts',target:100},
+  {id:'ramp_rat',name:'Ramp Rat',desc:'Ride 200 ramps total',tier:'silver',icon:'\uD83D\uDEF9',check:'lifetime',stat:'totalRamps',target:200},
+  {id:'wave_5',name:'Wave 5',desc:'Clear Wave 7',tier:'silver',icon:'\uD83C\uDF0A',check:'instant',stat:'waveNum',target:7},
+  // GOLD (hard — require serious skill)
+  {id:'untouchable',name:'Untouchable',desc:'Reach 1,000m without a shield hit',tier:'gold',icon:'\uD83D\uDC7B',check:'endgame',stat:'pgMaxMetersNoShield',target:1000},
+  {id:'five_k_legend',name:'5K Legend',desc:'Reach 5,000 meters',tier:'gold',icon:'\uD83C\uDFC6',check:'endgame',stat:'meters',target:5000},
+  {id:'near_miss_king',name:'Near Miss King',desc:'20 near misses in one game',tier:'gold',icon:'\uD83D\uDE0E',check:'endgame',stat:'pgNearMisses',target:20},
+  {id:'combo_demon',name:'Combo Demon',desc:'Reach x10 combo',tier:'gold',icon:'\uD83D\uDD17',check:'instant',stat:'pgMaxCombo',target:10},
+  {id:'spin_doctor',name:'Spin Doctor',desc:'30 barrel rolls in one game',tier:'gold',icon:'\uD83C\uDF00',check:'endgame',stat:'pgBarrelRolls',target:30},
+  {id:'speed_demon',name:'Speed Demon',desc:'Reach max speed',tier:'gold',icon:'\uD83C\uDFCE\uFE0F',check:'instant',stat:'spd',target:88},
+  {id:'bulldozer',name:'Bulldozer',desc:'Smash 15 obstacles with Boost',tier:'gold',icon:'\uD83D\uDE9C',check:'endgame',stat:'pgBoostSmashes',target:15},
+  {id:'wave_10',name:'Wave 10',desc:'Clear Wave 12',tier:'gold',icon:'\u26A1',check:'instant',stat:'waveNum',target:12},
+  {id:'score_crusher',name:'Score Crusher',desc:'Reach 25,000 total score',tier:'gold',icon:'\uD83D\uDCAF',check:'endgame',stat:'finalScore',target:25000},
+  {id:'laser_dancer',name:'Laser Dancer',desc:'Dodge 10 sweep lasers in one game',tier:'gold',icon:'\uD83D\uDC83',check:'endgame',stat:'pgSweepDodges',target:10},
+];
+
+// Achievement data persistence
+const HD_KEY='hd_data';
+function defaultHDData(){
+  const d={totalGames:0,totalCoins:0,totalShields:0,totalMagnets:0,totalBoosts:0,totalRamps:0,bestMeters:0,bestScore:0,unlocked:{}};
+  for(const a of ACHIEVEMENTS) d.unlocked[a.id]=0;
+  return d;
+}
+function loadHDData(){
+  try{const raw=localStorage.getItem(HD_KEY);if(raw){const d=JSON.parse(raw);for(const a of ACHIEVEMENTS){if(!(a.id in d.unlocked)) d.unlocked[a.id]=0;}return d;}}catch(e){}
+  const d=defaultHDData();
+  try{const old=parseInt(localStorage.getItem('hd_best'))||0;if(old>0) d.bestScore=old;}catch(e){}
+  return d;
+}
+function saveHDData(){try{localStorage.setItem(HD_KEY,JSON.stringify(hdData));}catch(e){}}
+let hdData=loadHDData();
+
+// ═══════════════════════════════════════════════════
 // STATE
 // ═══════════════════════════════════════════════════
 let gs='menu',score=0,meters=0,spd=SPD0,curLane=1,targetX=0;
@@ -176,6 +299,13 @@ let shieldActive=false,shieldTimer=0,magnetActive=false,magnetTimer=0;
 let boostActive=false,boostTimer=0,boostSpd=0;
 const SHIELD_DUR=6,MAGNET_DUR=8,BOOST_DUR=4,BOOST_SPD=18;
 let currentFov=BASE_FOV,targetFov=BASE_FOV;
+
+// Per-game achievement tracking (reset each game)
+let airTimer=0,airShown=false; // airtime bonus tracking
+let pgNearMisses=0,pgBarrelRolls=0,pgBoostSmashes=0,pgSweepDodges=0;
+let pgShieldsUsed=0,pgMagnetsUsed=0,pgBoostsUsed=0;
+let pgRampsRidden=0,pgBoostPadsHit=0;
+let pgMaxCombo=0,pgShieldWasHit=false,pgLastShieldHitMeters=0;
 
 // ═══════════════════════════════════════════════════
 // RENDERER
@@ -1340,7 +1470,7 @@ function applyZoneColor(v){
   S.background.copy(_c3);S.fog.color.copy(_c3);
 }
 function playZoneTransSFX(){
-  if(!audioCtx) initAudio();audioCtx.resume();
+  if(!sfxOk()) return;
   const t=audioCtx.currentTime;
   // Subtle ambient shift — soft sine sweep
   const osc=audioCtx.createOscillator();osc.type='sine';
@@ -1435,7 +1565,7 @@ function spawnO(){
     o.position.set((lane-1)*LW,0,SPAWN_Z);o.userData.active=true;o.userData.lane=lane;o.userData.lanes=[lane];o.userData.padTriggered=false;
   } else if(t===OT.SWEEP_LASER){
     o.position.set(0,0,SPAWN_Z);o.userData.active=true;o.userData.lane=1;o.userData.lanes=[0,1,2];
-    o.userData.sweepDir=Math.random()>.5?1:-1;o.userData.sweepPos=0;o.userData.sweepPhase=Math.random()*Math.PI*2;
+    o.userData.sweepDir=Math.random()>.5?1:-1;o.userData.sweepPos=0;o.userData.sweepPhase=Math.random()*Math.PI*2;o.userData.sweepDodged=false;
   } else {
     o.position.set((lane-1)*LW,0,SPAWN_Z);o.userData.active=true;o.userData.lane=lane;o.userData.lanes=[lane];
   }
@@ -1498,11 +1628,11 @@ function collide(){
         if(onRamp&&rampRef===o) continue;
         if(!air&&!onRamp&&!jumping&&relZ>=1&&relZ<=slopeFront+.5){
           onRamp=true;rampRef=o;jumpY=RAMP_H*Math.max(0,Math.min(1,(slopeFront-relZ)/slopeLen));
-          jumping=false;jumpPhase='none';jumpVelY=0;landShake=.05;showBonus('🚀 ON THE RAMP!');startGrindSFX();continue;
+          jumping=false;jumpPhase='none';jumpVelY=0;airTimer=0;airShown=false;landShake=.05;showBonus('🚀 ON THE RAMP!');startGrindSFX();pgRampsRidden++;hdData.totalRamps++;checkInstantAch();continue;
         }
         if(air&&jumpY>=RAMP_H*.4&&jumpY<RAMP_H+2.5&&relZ<1&&relZ>1-RAMP_LEN){
           onRamp=true;rampRef=o;jumping=false;jumpPhase='none';jumpVelY=0;jumpY=RAMP_H;
-          landShake=.1;landWobble=.3;showBonus('🚀 ON THE RAMP!');startGrindSFX();continue;
+          airTimer=0;airShown=false;landShake=.1;landWobble=.3;showBonus('🚀 ON THE RAMP!');startGrindSFX();pgRampsRidden++;hdData.totalRamps++;checkInstantAch();continue;
         }
         // Side/body approach: ship passes under the ramp body at ground level
         // Only the front slope (handled above) or landing from air allows getting on top
@@ -1512,7 +1642,7 @@ function collide(){
     // Boost pad — non-lethal, gives speed burst + big score
     if(t===OT.BOOST_PAD){
       if(!o.userData.padTriggered&&oz>=SHIP_Z-3&&oz<=SHIP_Z+3&&o.userData.lane===curLane&&!jumping){
-        o.userData.padTriggered=true;
+        o.userData.padTriggered=true;pgBoostPadsHit++;checkInstantAch();
         const pts=30*comboMultiplier;
         coinScore+=pts;showBonus('+'+pts+' BOOST PAD!');
         spd=Math.min(SPD_MAX,spd+8);screenShake=.06;flashTimer=.1;
@@ -1527,8 +1657,8 @@ function collide(){
         if(Math.abs(ship.position.x-beamX)<LW*.4){
           if(jumping&&jumpY>2) continue; // can jump over
           if(spinActive) continue;
-          if(boostActive){screenShake=.1;emitDeathExplosion(beamX,1.5,oz);rp(o);aObs.splice(i,1);coinScore+=25;showBonus('+25 SMASH!');playSFXSample('boost_smash',0.8);continue;}
-          if(shieldActive){shieldActive=false;shieldTimer=0;shieldBubble.visible=false;screenShake=.15;emitPUBurst(ship.position.x,1,SHIP_Z,C.cyan);rp(o);aObs.splice(i,1);document.getElementById('pu-shield').classList.remove('active');playShieldHitSFX();continue;}
+          if(boostActive){screenShake=.1;emitDeathExplosion(beamX,1.5,oz);rp(o);aObs.splice(i,1);coinScore+=25;showBonus('+25 SMASH!');playSFXSample('boost_smash',0.8);pgBoostSmashes++;continue;}
+          if(shieldActive){shieldActive=false;shieldTimer=0;shieldBubble.visible=false;screenShake=.15;emitPUBurst(ship.position.x,1,SHIP_Z,C.cyan);rp(o);aObs.splice(i,1);document.getElementById('pu-shield').classList.remove('active');playShieldHitSFX();pgShieldWasHit=true;pgLastShieldHitMeters=Math.floor(meters);continue;}
           return die();
         }
       }
@@ -1562,8 +1692,8 @@ function collide(){
     else if(t===OT.LOW_LASER){if(air) continue;}
     else if(t===OT.HIGH_LASER){if(isDuck||air) continue;}
     if(spinActive){continue;} // invincible during barrel roll
-    if(boostActive){screenShake=.1;emitDeathExplosion(o.position.x||ship.position.x,1.5,o.position.z);rp(o);aObs.splice(i,1);coinScore+=25;showBonus('+25 SMASH!');playSFXSample('boost_smash',0.8);continue;}
-    if(shieldActive){shieldActive=false;shieldTimer=0;shieldBubble.visible=false;screenShake=.15;emitPUBurst(ship.position.x,1,SHIP_Z,C.cyan);rp(o);aObs.splice(i,1);document.getElementById('pu-shield').classList.remove('active');playShieldHitSFX();continue;}
+    if(boostActive){screenShake=.1;emitDeathExplosion(o.position.x||ship.position.x,1.5,o.position.z);rp(o);aObs.splice(i,1);coinScore+=25;showBonus('+25 SMASH!');playSFXSample('boost_smash',0.8);pgBoostSmashes++;continue;}
+    if(shieldActive){shieldActive=false;shieldTimer=0;shieldBubble.visible=false;screenShake=.15;emitPUBurst(ship.position.x,1,SHIP_Z,C.cyan);rp(o);aObs.splice(i,1);document.getElementById('pu-shield').classList.remove('active');playShieldHitSFX();pgShieldWasHit=true;pgLastShieldHitMeters=Math.floor(meters);continue;}
     return die();
   }
   for(let i=aCol.length-1;i>=0;i--){
@@ -1572,7 +1702,7 @@ function collide(){
     if(c.position.z<SHIP_Z+1.2&&c.position.z>SHIP_Z-1.2&&Math.abs(c.position.x-sx)<LW*.7){
       comboCount++;comboTimer=COMBO_DUR;
       const newMult=Math.min(COMBO_MAX,1+Math.floor(comboCount/COMBO_FILL));
-      if(newMult>comboMultiplier){comboMultiplier=newMult;showBonus('x'+comboMultiplier+' COMBO!');}
+      if(newMult>comboMultiplier){comboMultiplier=newMult;showBonus('x'+comboMultiplier+' COMBO!');if(comboMultiplier>pgMaxCombo){pgMaxCombo=comboMultiplier;checkInstantAch();}}
       coinScore+=10*comboMultiplier;
       flashTimer=.1;emitCoinSparkle(c.position.x,1,c.position.z);rp(c);aCol.splice(i,1);
     }
@@ -1588,9 +1718,9 @@ function collide(){
 }
 
 function activatePU(t){
-  if(t===PU.SHIELD){shieldActive=true;shieldTimer=SHIELD_DUR;shieldBubble.visible=true;document.getElementById('pu-shield').classList.add('active');showBonus('SHIELD!');playShieldSFX();}
-  else if(t===PU.MAGNET){magnetActive=true;magnetTimer=MAGNET_DUR;document.getElementById('pu-magnet').classList.add('active');showBonus('MAGNET!');playMagnetSFX();}
-  else{boostActive=true;boostTimer=BOOST_DUR;boostSpd=BOOST_SPD;boostBubble.visible=true;document.getElementById('pu-boost').classList.add('active');showBonus('BOOST!');playBoostSFX();}
+  if(t===PU.SHIELD){shieldActive=true;shieldTimer=SHIELD_DUR;shieldBubble.visible=true;document.getElementById('pu-shield').classList.add('active');showBonus('SHIELD!');playShieldSFX();pgShieldsUsed++;hdData.totalShields++;checkInstantAch();}
+  else if(t===PU.MAGNET){magnetActive=true;magnetTimer=MAGNET_DUR;document.getElementById('pu-magnet').classList.add('active');showBonus('MAGNET!');playMagnetSFX();pgMagnetsUsed++;hdData.totalMagnets++;checkInstantAch();}
+  else{boostActive=true;boostTimer=BOOST_DUR;boostSpd=BOOST_SPD;boostBubble.visible=true;document.getElementById('pu-boost').classList.add('active');showBonus('BOOST!');playBoostSFX();pgBoostsUsed++;hdData.totalBoosts++;checkInstantAch();}
 }
 function updatePU(){
   if(shieldActive){shieldTimer-=dt;shieldBubble.material.opacity=.1+Math.sin(elapsed*6)*.06;if(shieldTimer<=0){shieldActive=false;shieldBubble.visible=false;document.getElementById('pu-shield').classList.remove('active');}}
@@ -1615,7 +1745,7 @@ function doJump(){
   if(jumping&&hasDoubleJump&&!spinActive){
     hasDoubleJump=false;spinActive=true;spinTimer=SPIN_DUR;spinAngle=0;
     jumpVelY=SPIN_BOOST;jumpPhase='rise'; // small upward kick
-    coinScore+=15;showBonus('+15 SPIN!');screenShake=.08;playSpinSFX();
+    coinScore+=15;showBonus('+15 SPIN!');screenShake=.08;playSpinSFX();pgBarrelRolls++;
     if(comboTimer>0) comboTimer=Math.min(COMBO_DUR,comboTimer+0.3);
     emitSparks(ship.position.x,ship.position.y,SHIP_Z,12);
     return;
@@ -1631,7 +1761,20 @@ function updateJump(){
   if(jumpPhase==='rise'&&jumpVelY<=0) jumpPhase=holdingJump?'float':'fall';
   if(jumpPhase==='float'&&!holdingJump) jumpPhase='fall';
   jumpY+=jumpVelY*dt;
-  if(jumpY<=0){jumpY=0;jumping=false;jumpPhase='none';jumpVelY=0;hasDoubleJump=false;spinActive=false;spinTimer=0;spinAngle=0;landShake=.18;landWobble=.8;emitLandingImpact(ship.position.x,SHIP_Z);playLandSFX();}
+  // Airtime tracking
+  airTimer+=dt;
+  if(airTimer>=1.0&&!airShown){airShown=true;} // threshold before bonus kicks in
+  if(jumpY<=0){
+    jumpY=0;jumping=false;jumpPhase='none';jumpVelY=0;hasDoubleJump=false;spinActive=false;spinTimer=0;spinAngle=0;
+    // Airtime bonus — escalating: 1s=nothing, 1.5s+= points
+    if(airTimer>=1.5){
+      const secs=airTimer;
+      const pts=Math.floor(secs*secs*3)*comboMultiplier; // quadratic scaling
+      coinScore+=pts;showBonus('+'+pts+' AIRTIME! ('+secs.toFixed(1)+'s)');
+    }
+    airTimer=0;airShown=false;
+    landShake=.18;landWobble=.8;emitLandingImpact(ship.position.x,SHIP_Z);playLandSFX();
+  }
   if(jumpY>6) jumpY=6;
 }
 function updateDuck(){if(!ducking) return;duckTimer-=dt;if(duckTimer<=0){ducking=false;duckTimer=0;}}
@@ -1639,7 +1782,7 @@ function updateDuck(){if(!ducking) return;duckTimer-=dt;if(duckTimer<=0){ducking
 // ═══════════════════════════════════════════════════
 // GAME
 // ═══════════════════════════════════════════════════
-let bestScore=0;try{bestScore=parseInt(localStorage.getItem('hd_best'))||0;}catch(e){}
+let bestScore=hdData.bestScore;
 
 function togglePause(){
   if(gs!=='playing'&&gs!=='countdown'&&!paused) return;
@@ -1656,8 +1799,91 @@ function togglePause(){
   } else {
     po.classList.remove('show');
     pb.textContent='\u23F8';
-    if(musicWasPlaying){startEmbeddedMusic();document.getElementById('music-btn').textContent='\u266B MUSIC: ON';document.getElementById('music-btn').classList.add('playing');}
+    if(musicWasPlaying){startEmbeddedMusic();document.getElementById('music-btn').textContent='ON';document.getElementById('music-btn').classList.add('on');}
     clock.start();clock.getDelta();
+  }
+}
+
+// ═══════════════════════════════════════════════════
+// ACHIEVEMENT ENGINE
+// ═══════════════════════════════════════════════════
+let achToastQueue=[],achToastActive=false;
+
+function getStatValue(s){
+  switch(s){
+    case 'totalGames':return hdData.totalGames;case 'totalCoins':return hdData.totalCoins;
+    case 'totalShields':return hdData.totalShields;case 'totalMagnets':return hdData.totalMagnets;
+    case 'totalBoosts':return hdData.totalBoosts;case 'totalRamps':return hdData.totalRamps;
+    case 'meters':return Math.floor(meters);case 'coinScore':return coinScore;
+    case 'finalScore':return Math.floor(meters)+coinScore;
+    case 'waveNum':return waveNum;case 'spd':return spd;
+    case 'pgNearMisses':return pgNearMisses;case 'pgBarrelRolls':return pgBarrelRolls;
+    case 'pgBoostSmashes':return pgBoostSmashes;case 'pgSweepDodges':return pgSweepDodges;
+    case 'pgShieldsUsed':return pgShieldsUsed;case 'pgMagnetsUsed':return pgMagnetsUsed;
+    case 'pgBoostsUsed':return pgBoostsUsed;case 'pgRampsRidden':return pgRampsRidden;
+    case 'pgBoostPadsHit':return pgBoostPadsHit;case 'pgMaxCombo':return pgMaxCombo;
+    case 'pgMaxMetersNoShield':return pgShieldWasHit?Math.floor(meters)-pgLastShieldHitMeters:Math.floor(meters);
+    default:return 0;
+  }
+}
+
+function showAchToast(ach){
+  achToastQueue.push(ach);
+  if(!achToastActive) popAchToast();
+}
+function popAchToast(){
+  if(!achToastQueue.length){achToastActive=false;return;}
+  achToastActive=true;
+  const ach=achToastQueue.shift();
+  const t=document.getElementById('achievement-toast');
+  document.getElementById('ach-toast-icon').textContent=ach.icon;
+  document.getElementById('ach-toast-name').textContent=ach.name;
+  const tierEl=document.getElementById('ach-toast-tier');
+  tierEl.textContent=ach.tier.toUpperCase();tierEl.className='ach-tier-label '+ach.tier;
+  t.classList.add('show');
+  setTimeout(()=>{t.classList.remove('show');setTimeout(popAchToast,400);},2800);
+}
+
+function playAchSFX(){
+  if(!sfxOk()) return;
+  const t=audioCtx.currentTime;
+  // Quick two-tone chime: G5 → C6
+  const notes=[784,1047];
+  for(let i=0;i<2;i++){
+    const o=audioCtx.createOscillator();o.type='sine';o.frequency.value=notes[i];
+    const g=audioCtx.createGain();const on=t+i*0.08;
+    g.gain.setValueAtTime(0.001,on);g.gain.linearRampToValueAtTime(0.25,on+0.015);
+    g.gain.exponentialRampToValueAtTime(0.001,on+0.4);
+    o.connect(g);g.connect(audioCtx.destination);o.start(on);o.stop(on+0.45);
+  }
+}
+
+function tryUnlock(ach){
+  if(hdData.unlocked[ach.id]) return false;
+  hdData.unlocked[ach.id]=Date.now();saveHDData();
+  showAchToast(ach);playAchSFX();return true;
+}
+
+function checkInstantAch(){
+  for(const a of ACHIEVEMENTS){
+    if(a.check!=='instant'||hdData.unlocked[a.id]) continue;
+    if(getStatValue(a.stat)>=a.target) tryUnlock(a);
+  }
+}
+
+function checkEndgameAch(){
+  // Update lifetime stats
+  hdData.totalGames++;hdData.totalCoins+=coinScore;
+  const m=Math.floor(meters),fs=m+coinScore;
+  if(m>hdData.bestMeters) hdData.bestMeters=m;
+  if(fs>hdData.bestScore) hdData.bestScore=fs;
+  saveHDData();
+  // Check endgame + lifetime achievements
+  for(const a of ACHIEVEMENTS){
+    if(hdData.unlocked[a.id]) continue;
+    if(a.check==='endgame'||a.check==='lifetime'){
+      if(getStatValue(a.stat)>=a.target) tryUnlock(a);
+    }
   }
 }
 
@@ -1668,15 +1894,18 @@ function die(){
   emitDeathExplosion(ship.position.x,ship.position.y,SHIP_Z);
   const m=Math.floor(meters);
   const finalScore=m+coinScore;
-  const isNewBest=finalScore>bestScore;
-  if(isNewBest){bestScore=finalScore;try{localStorage.setItem('hd_best',bestScore);}catch(e){}}
+  checkEndgameAch();
+  bestScore=hdData.bestScore;
+  const isNewBest=finalScore>=bestScore;
   setTimeout(()=>{playGameOverSFX();if(isNewBest)setTimeout(playHighScoreSFX,500);},400);
   document.getElementById('overlay').classList.remove('hidden');
+  switchTab('play');
   document.getElementById('game-title').textContent='GAME OVER';document.getElementById('game-subtitle').textContent='';
   document.getElementById('final-score').style.display='block';document.getElementById('final-score').textContent='SCORE: '+finalScore;
   document.getElementById('final-coins').style.display='block';document.getElementById('final-coins').textContent=m+'m  +  \u{1FA99}'+coinScore;
   document.getElementById('best-score').style.display='block';document.getElementById('best-score').textContent='BEST: '+bestScore;
   document.getElementById('start-btn').textContent='RETRY';
+  document.getElementById('menu-btn').style.display='inline-block';
   document.getElementById('pause-btn').classList.remove('show');
 }
 
@@ -1695,12 +1924,32 @@ function start(){
   shieldBubble.visible=false;boostBubble.visible=false;
   for(const sp of particles) sp.visible=false;particles.length=0;
   document.querySelectorAll('.pu-icon').forEach(e=>e.classList.remove('active'));
+  // Reset per-game tracking
+  airTimer=0;airShown=false;
+  pgNearMisses=0;pgBarrelRolls=0;pgBoostSmashes=0;pgSweepDodges=0;
+  pgShieldsUsed=0;pgMagnetsUsed=0;pgBoostsUsed=0;
+  pgRampsRidden=0;pgBoostPadsHit=0;
+  pgMaxCombo=0;pgShieldWasHit=false;pgLastShieldHitMeters=0;
   ship.position.set(0,SHIP_Y0,SHIP_Z);ship.rotation.set(0,0,0);ship.scale.set(1,1,1);
   gs='countdown';gameT0=elapsed;countdownT=0;curZone=0;zoneTimer=0;zoneLerp.active=false;forceZone(0);
   // Wave 0 practice only on first play; restart skips straight to 3-2-1
   if(firstPlay){countdownN=4;firstPlay=false;} else {countdownN=3;}
   // Auto-start embedded music on first play (triggered by user gesture = START click)
-  if(!musicPlaying){musicPlaying=true;startEmbeddedMusic();document.getElementById('music-btn').textContent='♫ MUSIC: ON';document.getElementById('music-btn').classList.add('playing');}
+  if(!musicPlaying){musicPlaying=true;startEmbeddedMusic();document.getElementById('music-btn').textContent='ON';document.getElementById('music-btn').classList.add('on');}
+  // Reset HUD immediately so old score doesn't show during countdown
+  document.getElementById('score-val').textContent='0';
+  document.getElementById('meter-val').textContent='0';
+  document.getElementById('speed-val').textContent='0';
+  document.getElementById('combo-wrap').classList.remove('active');
+  // Reset overlay for next show
+  document.getElementById('game-title').innerHTML='HOVER<br>DASH';
+  document.getElementById('game-subtitle').textContent='Lane Runner';
+  document.getElementById('final-score').style.display='none';
+  document.getElementById('final-coins').style.display='none';
+  document.getElementById('best-score').style.display='none';
+  document.getElementById('start-btn').textContent='START';
+  document.getElementById('menu-btn').style.display='none';
+  switchTab('play');
   document.getElementById('overlay').classList.add('hidden');
   document.getElementById('pause-btn').classList.add('show');
   paused=false;document.getElementById('pause-overlay').classList.remove('show');
@@ -1722,17 +1971,80 @@ function sLane(d){
   curLane=n;targetX=(curLane-1)*LW;
 }
 
+// MENU FOCUS SYSTEM
+let menuFocus=-1; // -1=tab bar, 0+=content items
+function getMenuItems(tab){
+  if(tab==='play'){
+    const items=[];
+    const s=document.getElementById('start-btn');if(s) items.push(s);
+    const m=document.getElementById('menu-btn');if(m&&m.style.display!=='none') items.push(m);
+    return items;
+  }
+  if(tab==='settings'){
+    return Array.from(document.querySelectorAll('.setting-toggle'));
+  }
+  return []; // trophies has no focusable items
+}
+function updateMenuFocus(){
+  // Clear all focus highlights
+  document.querySelectorAll('.menu-focused').forEach(el=>el.classList.remove('menu-focused'));
+  if(menuFocus<0) return; // on tab bar, no item highlight
+  const curTab=document.querySelector('.tab-btn.active')?.dataset.tab||'play';
+  const items=getMenuItems(curTab);
+  if(menuFocus>=0&&menuFocus<items.length){
+    items[menuFocus].classList.add('menu-focused');
+  }
+}
+
 // INPUT
 document.addEventListener('keydown',e=>{
   if(e.repeat) return;
   if(e.key==='p'||e.key==='P'||e.key==='Escape'){if(gs==='playing'||gs==='countdown'||paused){e.preventDefault();togglePause();return;}}
   if(paused) return;
+  const inMenu=gs==='menu'||gs==='dead';
+  // Menu/overlay keyboard navigation
+  if(inMenu){
+    e.preventDefault();
+    const tabs=Array.from(document.querySelectorAll('.tab-btn')).map(b=>b.dataset.tab);
+    const curTab=document.querySelector('.tab-btn.active')?.dataset.tab||'play';
+    const ci=tabs.indexOf(curTab);
+    // Get focusable items in current tab
+    const items=getMenuItems(curTab);
+    // Tab cycles tabs
+    if(e.key==='Tab'){switchTab(tabs[(ci+1)%tabs.length]);menuFocus=-1;updateMenuFocus();return;}
+    // Left/Right switch tabs (when focus on tab bar)
+    if(e.key==='ArrowLeft'){
+      if(menuFocus<0&&ci>0){switchTab(tabs[ci-1]);menuFocus=-1;updateMenuFocus();}
+      return;
+    }
+    if(e.key==='ArrowRight'){
+      if(menuFocus<0&&ci<tabs.length-1){switchTab(tabs[ci+1]);menuFocus=-1;updateMenuFocus();}
+      return;
+    }
+    // Down enters content / moves down
+    if(e.key==='ArrowDown'||e.key==='s'||e.key==='S'){
+      if(items.length>0){menuFocus=Math.min(menuFocus+1,items.length-1);updateMenuFocus();}
+      return;
+    }
+    // Up goes back up
+    if(e.key==='ArrowUp'||e.key==='w'||e.key==='W'){
+      menuFocus=Math.max(-1,menuFocus-1);updateMenuFocus();
+      return;
+    }
+    // Enter/Space activates focused item
+    if(e.key==='Enter'||e.key===' '){
+      if(menuFocus>=0&&menuFocus<items.length){items[menuFocus].click();}
+      else if(menuFocus<0&&curTab==='play') start();
+      return;
+    }
+    return;
+  }
+  // Gameplay keys
   switch(e.key){
     case 'a':case 'A':case 'ArrowLeft':sLane(-1);break;
     case 'd':case 'D':case 'ArrowRight':sLane(1);break;
-    case ' ':case 'w':case 'W':case 'ArrowUp':e.preventDefault();holdingJump=true;if(gs==='playing'||gs==='countdown') doJump(); else start();break;
+    case ' ':case 'w':case 'W':case 'ArrowUp':e.preventDefault();holdingJump=true;doJump();break;
     case 's':case 'S':case 'ArrowDown':e.preventDefault();doDuck();break;
-    case 'Enter':if(gs!=='playing') start();break;
   }
 });
 document.addEventListener('keyup',e=>{if(e.key===' '||e.key==='w'||e.key==='W'||e.key==='ArrowUp') holdingJump=false;});
@@ -1759,6 +2071,48 @@ document.addEventListener('touchend',e=>{
   if(!tSwiped){if(gs==='playing'||gs==='countdown') doJump(); else start();}
 },{passive:false});
 document.getElementById('start-btn').addEventListener('click',start);
+document.getElementById('menu-btn').addEventListener('click',()=>{
+  gs='menu';
+  document.getElementById('game-title').innerHTML='HOVER<br>DASH';
+  document.getElementById('game-subtitle').textContent='Lane Runner';
+  document.getElementById('final-score').style.display='none';
+  document.getElementById('final-coins').style.display='none';
+  document.getElementById('best-score').style.display='none';
+  document.getElementById('start-btn').textContent='START';
+  document.getElementById('menu-btn').style.display='none';
+  switchTab('play');
+});
+
+// ═══════════════════════════════════════════════════
+// TAB SWITCHING + TROPHY GRID
+// ═══════════════════════════════════════════════════
+function switchTab(name){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab===name));
+  document.querySelectorAll('.tab-content').forEach(c=>c.classList.toggle('active',c.id==='tab-'+name));
+  if(name==='trophies') renderTrophyGrid();
+  menuFocus=-1;updateMenuFocus();
+}
+document.querySelectorAll('.tab-btn').forEach(b=>b.addEventListener('click',()=>switchTab(b.dataset.tab)));
+
+function renderTrophyGrid(){
+  const grid=document.getElementById('trophy-grid');grid.innerHTML='';
+  let n=0;
+  for(const a of ACHIEVEMENTS){
+    const ok=!!hdData.unlocked[a.id];if(ok) n++;
+    const cur=ok?a.target:Math.min(getStatValue(a.stat),a.target);
+    const pct=Math.min(100,Math.round(cur/a.target*100));
+    const c=document.createElement('div');
+    c.className='trophy-card '+a.tier+(ok?' unlocked':' locked');
+    c.innerHTML='<div class="trophy-tier '+a.tier+'">'+a.tier.toUpperCase()+'</div>'
+      +'<div class="trophy-icon">'+(ok?a.icon:'\uD83D\uDD12')+'</div>'
+      +'<div class="trophy-name">'+a.name+'</div>'
+      +'<div class="trophy-desc">'+a.desc+'</div>'
+      +(ok?'<div class="trophy-check">\u2713</div>'
+        :'<div class="trophy-progress"><div class="trophy-pbar '+a.tier+'" style="width:'+pct+'%"></div></div>');
+    grid.appendChild(c);
+  }
+  document.getElementById('trophy-count').textContent=n+' / '+ACHIEVEMENTS.length;
+}
 
 const perfEl=document.getElementById('perf');let pA=0,fC=0,lFps=0;
 function perf(){pA+=dt;fC++;if(pA>=.5){lFps=Math.round(fC/pA);pA=0;fC=0;}const i=R.info.render;perfEl.textContent=`FPS: ${lFps} | Draws: ${i.calls} | Tris: ${i.triangles}`;}
@@ -1768,6 +2122,8 @@ function perf(){pA+=dt;fC++;if(pA>=.5){lFps=Math.round(fC/pA);pA=0;fC=0;}const i
 // ═══════════════════════════════════════════════════
 // Music loaded from external file: Distant Cosmos.mp3
 let audioCtx,analyser,freqData,musicPlaying=false,audioSrc=null,audioEl=null;
+let sfxEnabled=true;
+function sfxOk(){if(!sfxEnabled) return false;if(!audioCtx) initAudio();audioCtx.resume();return true;}
 const FFTSIZE=256;
 
 
@@ -1795,8 +2151,7 @@ function ensureNoiseBuf(){
 // Active tunnel sound state per wall gate
 let activeTunnelSound=null;
 function startTunnelWhoosh(vol){
-  if(!audioCtx) initAudio();
-  audioCtx.resume();
+  if(!sfxOk()) return;
   ensureNoiseBuf();
   stopTunnelWhoosh(); // clean up any previous
   const t=audioCtx.currentTime;
@@ -1878,8 +2233,7 @@ function stopTunnelWhoosh(){
 
 // ── SFX: barrel roll spin sound ──
 function playSpinSFX(){
-  if(!audioCtx) initAudio();
-  audioCtx.resume();
+  if(!sfxOk()) return;
   ensureNoiseBuf();
   const t=audioCtx.currentTime,dur=SPIN_DUR;
   // Layer 1: Deep tonal sweep (heavy mechanical spin)
@@ -1918,8 +2272,7 @@ function playSpinSFX(){
 
 // ── SFX: power-up pickup sounds ──
 function playShieldSFX(){
-  if(!audioCtx) initAudio();
-  audioCtx.resume();
+  if(!sfxOk()) return;
   const t=audioCtx.currentTime;
   // Shimmering chime — two detuned high sines + a bell harmonic
   const f=[880,1320,1760];
@@ -1950,8 +2303,7 @@ function playShieldSFX(){
 }
 
 function playBoostSFX(){
-  if(!audioCtx) initAudio();
-  audioCtx.resume();
+  if(!sfxOk()) return;
   ensureNoiseBuf();
   const t=audioCtx.currentTime,dur=0.6;
   // Rocket ignition — rising low noise burst
@@ -1987,8 +2339,7 @@ function playBoostSFX(){
 }
 
 function playMagnetSFX(){
-  if(!audioCtx) initAudio();
-  audioCtx.resume();
+  if(!sfxOk()) return;
   const t=audioCtx.currentTime,dur=0.45;
   // Electric zap — fast square wave chirp
   const osc=audioCtx.createOscillator();
@@ -2031,8 +2382,7 @@ function playMagnetSFX(){
 // ── SFX: ramp grind (skateboard rail grind) ──
 let activeGrindSound=null;
 function startGrindSFX(){
-  if(!audioCtx) initAudio();
-  audioCtx.resume();
+  if(!sfxOk()) return;
   ensureNoiseBuf();
   stopGrindSFX();
   const t=audioCtx.currentTime;
@@ -2096,7 +2446,7 @@ function stopGrindSFX(){
 
 // ── SFX: jump (hydraulic whoosh up) ──
 function playJumpSFX(){
-  if(!audioCtx) initAudio();audioCtx.resume();ensureNoiseBuf();
+  if(!sfxOk()) return;ensureNoiseBuf();
   const t=audioCtx.currentTime,dur=0.2;
   const src=audioCtx.createBufferSource();src.buffer=noiseBuf;
   const bp=audioCtx.createBiquadFilter();bp.type='bandpass';bp.Q.value=0.8;
@@ -2110,7 +2460,7 @@ function playJumpSFX(){
 
 // ── SFX: landing (thud impact) ──
 function playLandSFX(){
-  if(!audioCtx) initAudio();audioCtx.resume();ensureNoiseBuf();
+  if(!sfxOk()) return;ensureNoiseBuf();
   const t=audioCtx.currentTime;
   // Low thud
   const src=audioCtx.createBufferSource();src.buffer=noiseBuf;
@@ -2123,7 +2473,7 @@ function playLandSFX(){
 
 // ── SFX: crash/death (explosion) ──
 function playCrashSFX(){
-  if(!audioCtx) initAudio();audioCtx.resume();ensureNoiseBuf();
+  if(!sfxOk()) return;ensureNoiseBuf();
   const t=audioCtx.currentTime,dur=0.7;
   // Low explosion boom
   const src=audioCtx.createBufferSource();src.buffer=noiseBuf;
@@ -2145,7 +2495,7 @@ function playCrashSFX(){
 
 // ── SFX: game over stinger ──
 function playGameOverSFX(){
-  if(!audioCtx) initAudio();audioCtx.resume();
+  if(!sfxOk()) return;
   const t=audioCtx.currentTime;
   // Descending minor chord: sad resolution
   const notes=[440,349,262]; // A4, F4, C4 — descending
@@ -2163,7 +2513,7 @@ function playGameOverSFX(){
 
 // ── SFX: countdown beep ──
 function playCountdownBeep(pitch){
-  if(!audioCtx) initAudio();audioCtx.resume();
+  if(!sfxOk()) return;
   const t=audioCtx.currentTime;
   const osc=audioCtx.createOscillator();osc.type='sine';osc.frequency.value=pitch;
   const g=audioCtx.createGain();
@@ -2175,7 +2525,7 @@ function playCountdownBeep(pitch){
 
 // ── SFX: GO! burst ──
 function playGoSFX(){
-  if(!audioCtx) initAudio();audioCtx.resume();ensureNoiseBuf();
+  if(!sfxOk()) return;ensureNoiseBuf();
   const t=audioCtx.currentTime;
   // Rising chord
   const notes=[523,659,784]; // C5, E5, G5 — major chord
@@ -2199,7 +2549,7 @@ function playGoSFX(){
 
 // ── SFX: ramp launch (rocket thrust) ──
 function playLaunchSFX(){
-  if(!audioCtx) initAudio();audioCtx.resume();ensureNoiseBuf();
+  if(!sfxOk()) return;ensureNoiseBuf();
   const t=audioCtx.currentTime,dur=0.35;
   // Upward thrust burst
   const src=audioCtx.createBufferSource();src.buffer=noiseBuf;
@@ -2221,7 +2571,7 @@ function playLaunchSFX(){
 
 // ── SFX: shield hit (metallic block) ──
 function playShieldHitSFX(){
-  if(!audioCtx) initAudio();audioCtx.resume();ensureNoiseBuf();
+  if(!sfxOk()) return;ensureNoiseBuf();
   const t=audioCtx.currentTime;
   // Metallic clang
   const osc=audioCtx.createOscillator();osc.type='square';
@@ -2243,7 +2593,7 @@ function playShieldHitSFX(){
 
 // ── SFX: boost smash (crunch through obstacle) ──
 function playSmashSFX(){
-  if(!audioCtx) initAudio();audioCtx.resume();ensureNoiseBuf();
+  if(!sfxOk()) return;ensureNoiseBuf();
   const t=audioCtx.currentTime;
   // Crunchy impact
   const src=audioCtx.createBufferSource();src.buffer=noiseBuf;
@@ -2263,7 +2613,7 @@ function playSmashSFX(){
 
 // ── SFX: high score fanfare ──
 function playHighScoreSFX(){
-  if(!audioCtx) initAudio();audioCtx.resume();
+  if(!sfxOk()) return;
   const t=audioCtx.currentTime;
   // Ascending major arpeggio: C5-E5-G5-C6
   const notes=[523,659,784,1047];
@@ -2281,7 +2631,7 @@ function playHighScoreSFX(){
 
 // ── SFX: near miss (subtle tense whoosh) ──
 function playNearMissSFX(){
-  if(!audioCtx) initAudio();audioCtx.resume();ensureNoiseBuf();
+  if(!sfxOk()) return;ensureNoiseBuf();
   const t=audioCtx.currentTime;
   const src=audioCtx.createBufferSource();src.buffer=noiseBuf;
   const bp=audioCtx.createBiquadFilter();bp.type='bandpass';bp.Q.value=1.5;
@@ -2300,7 +2650,7 @@ function loadSFX(name,url){
   fetch(url).then(r=>r.arrayBuffer()).then(ab=>audioCtx.decodeAudioData(ab,buf=>{sfxBuffers[name]=buf;})).catch(e=>console.warn('SFX load error:',name,e));
 }
 function playSFXSample(name,vol){
-  if(!audioCtx||!sfxBuffers[name]) return;
+  if(!sfxEnabled||!audioCtx||!sfxBuffers[name]) return;
   audioCtx.resume();
   const src=audioCtx.createBufferSource();src.buffer=sfxBuffers[name];
   const g=audioCtx.createGain();g.gain.value=vol||1;
@@ -2350,11 +2700,18 @@ function toggleMusic(){
   const btn=document.getElementById('music-btn');
   if(musicPlaying){
     stopMusic();musicPlaying=false;
-    btn.textContent='♫ MUSIC: OFF';btn.classList.remove('playing');
+    btn.textContent='OFF';btn.classList.remove('on');
   } else {
     startEmbeddedMusic();
-    btn.textContent='♫ MUSIC: ON';btn.classList.add('playing');
+    btn.textContent='ON';btn.classList.add('on');
   }
+}
+function toggleSFX(){
+  sfxEnabled=!sfxEnabled;
+  const btn=document.getElementById('sfx-btn');
+  btn.textContent=sfxEnabled?'ON':'OFF';
+  btn.classList.toggle('on',sfxEnabled);
+  if(!sfxEnabled){if(activeTunnelSound) stopTunnelWhoosh();if(activeGrindSound) stopGrindSFX();}
 }
 
 // Get audio frequency data for visualizer
@@ -2427,6 +2784,7 @@ function loop(){
 
   if(gs==='playing'){
     const eSpd=spd+boostSpd;const spdInc=spd>=SPD_SLOW?SPD_INC*.4:SPD_INC;spd=Math.min(spd+spdInc*dt,SPD_MAX);meters+=eSpd*dt*.5;
+    if(spd>=SPD_MAX) checkInstantAch();
     const tp=elapsed-gameT0;diff=tp>40?4:tp>28?3:tp>16?2:tp>8?1:0;
     obsTimer-=dt;waveTimer+=dt;
     if(wavePhase==='action'){
@@ -2441,7 +2799,7 @@ function loop(){
       // REST — coin shower
       if(waveTimer>=waveRestDur){
         wavePhase='action';waveTimer=0;obsTimer=.5;
-        waveNum++;showBonus('⚡ WAVE '+waveNum);flashTimer=.2;playSFXSample('wave_start',0.8);
+        waveNum++;showBonus('⚡ WAVE '+waveNum);flashTimer=.2;playSFXSample('wave_start',0.8);checkInstantAch();
       }
     }
     // Coins: normal rate in action, 4x in rest
@@ -2569,6 +2927,8 @@ function loop(){
           }
         }
       }
+      // Sweep laser dodge tracking
+      if(o.userData.type===OT.SWEEP_LASER&&!o.userData.sweepDodged&&o.position.z>=SHIP_Z){o.userData.sweepDodged=true;pgSweepDodges++;}
       // Near-miss detection: obstacle just passed ship, ship in adjacent lane
       if(!o.userData.nearMissed&&o.position.z>=SHIP_Z&&o.userData.type!==OT.RAMP&&o.userData.type!==OT.BOOST_PAD){
         o.userData.nearMissed=true;
@@ -2585,7 +2945,7 @@ function loop(){
         if(isAdjacent||dodgedInLane){
           const pts=5*comboMultiplier;
           coinScore+=pts;showBonus('+'+pts+' CLOSE!');
-          playNearMissSFX();screenShake=.03;
+          playNearMissSFX();screenShake=.03;pgNearMisses++;checkInstantAch();
         }
       }
       const dz=o.userData.type===OT.RAMP?DESPAWN_Z+RAMP_LEN+2:o.userData.type===OT.WALL_GATE?DESPAWN_Z+16:DESPAWN_Z;

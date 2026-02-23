@@ -14,14 +14,31 @@
 
 | Prio | Uppgift | Status |
 |------|---------|--------|
-| 1 | Paus-funktion | Kör nu |
-| 2 | Ljudeffekter (SFX) | Nästa |
-| 3 | Swipe-down duck (mobil) | Snabbfix |
-| 4 | Combo/multiplier-system | Brainstorm |
-| 5 | Milstolpar/achievements | Brainstorm |
+| 1 | Paus-funktion | Klart |
+| 2 | Ljudeffekter (SFX) | Klart |
+| 3 | Swipe-down duck (mobil) | Klart |
+| 4 | Combo/multiplier-system | Klart |
+| 5 | Milstolpar/achievements | Klart |
 | 6 | Dagliga utmaningar | Design |
 | 7 | Fler hindertyper | Design |
 | 8 | CrazyGames SDK + Leaderboard + Ads | Sist |
+
+---
+
+## Nästa omgång
+
+### UI / Menyer
+- [ ] Pausmenyns RESUME-knapp är fortfarande solid turkos — byt till outline-stil som game over-knapparna
+- [ ] Pausöverlayens bakgrund har annan opacity än game over — gör dem lika
+
+### Ljud
+- [ ] Music ska vara ON som default (är OFF nu)
+- [ ] Spara music/SFX-toggle till localStorage och ladda vid start
+
+### Mobil
+- [ ] Pausknappen för liten (40x40px) — svår att träffa på mobil, öka storlek
+- [ ] Ingen visuell feedback vid swipe (lane change-förhandsgranskning)
+- [ ] HUD skalar dåligt på små skärmar — lägg till responsiva media queries
 
 ---
 
