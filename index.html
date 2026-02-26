@@ -3,7 +3,28 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Hover Dash</title>
+<title>Hover Dash - Lane Runner</title>
+<meta name="description" content="Dodge obstacles, collect coins, and boost through neon lanes in this fast-paced arcade runner. How far can you go?">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#00e5ff">
+<link rel="canonical" href="https://pulsegames.eu/">
+
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="Hover Dash - Lane Runner">
+<meta property="og:description" content="Dodge obstacles, collect coins, and boost through neon lanes in this fast-paced arcade runner. How far can you go?">
+<meta property="og:image" content="https://pulsegames.eu/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:url" content="https://pulsegames.eu">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Hover Dash - Lane Runner">
+<meta name="twitter:description" content="Dodge obstacles, collect coins, and boost through neon lanes in this fast-paced arcade runner.">
+<meta name="twitter:image" content="https://pulsegames.eu/og-image.png">
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
   body{background:#050508;overflow:hidden;font-family:'Segoe UI',system-ui,sans-serif;touch-action:none;user-select:none}
@@ -30,8 +51,9 @@
   #combo-bar-bg{width:80px;height:5px;background:#ffffff11;border-radius:3px;overflow:hidden}
   #combo-bar{height:100%;width:100%;border-radius:3px;transition:background .3s}
   #powerup-hud{position:fixed;top:80px;left:50%;transform:translateX(-50%);pointer-events:none;z-index:10;display:flex;gap:8px}
-  .pu-icon{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;border:2px solid;opacity:0;transition:opacity .3s}
+  .pu-icon{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;border:2px solid;opacity:0;position:relative}
   .pu-icon.active{opacity:1}
+  .pu-ring{position:absolute;left:50%;top:50%;width:42px;height:42px;transform:translate(-50%,-50%) rotate(-90deg)}
   #bonus-pop{position:fixed;top:40%;left:50%;transform:translate(-50%,-50%);font-size:28px;font-weight:900;color:#ffdd44;text-shadow:0 0 20px #ffaa0088;pointer-events:none;z-index:10;opacity:0;transition:all .4s}
   #countdown-pop{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-size:120px;font-weight:900;color:#00e5ff;text-shadow:0 0 60px #00e5ff,0 0 120px #00e5ffaa;pointer-events:none;z-index:15;opacity:0;transition:opacity .2s;letter-spacing:-4px}
   #bonus-pop.show{opacity:1;transform:translate(-50%,-60%)}
@@ -142,12 +164,12 @@
   <div id="hud-center"><div id="meter-val">0</div><div id="meter-unit">METERS</div><div id="zone-label"></div><div id="wave-ind"></div>
     <div id="combo-wrap"><div id="combo-mult"></div><div id="combo-bar-bg"><div id="combo-bar"></div></div></div>
   </div>
-  <div class="hud-item"><div class="hud-label">Speed</div><div class="hud-value" id="speed-val">1</div></div>
+  <div class="hud-item" style="margin-right:48px"><div class="hud-label">Speed</div><div class="hud-value" id="speed-val">1</div></div>
 </div>
 <div id="powerup-hud">
-  <div class="pu-icon" id="pu-shield" style="border-color:#44aaff;background:#44aaff22;color:#44aaff">🛡</div>
-  <div class="pu-icon" id="pu-magnet" style="border-color:#ff44ff;background:#ff44ff22;color:#ff44ff">🧲</div>
-  <div class="pu-icon" id="pu-boost" style="border-color:#ff4400;background:#ff440022;color:#ff4400">⚡</div>
+  <div class="pu-icon" id="pu-shield" style="border-color:#44aaff;background:#44aaff22;color:#44aaff">🛡<svg class="pu-ring" viewBox="0 0 42 42"><circle id="pu-ring-shield" cx="21" cy="21" r="18" fill="none" stroke="#44aaff" stroke-width="3" stroke-dasharray="113.1" stroke-dashoffset="0" stroke-linecap="round"/></svg></div>
+  <div class="pu-icon" id="pu-magnet" style="border-color:#ff44ff;background:#ff44ff22;color:#ff44ff">🧲<svg class="pu-ring" viewBox="0 0 42 42"><circle id="pu-ring-magnet" cx="21" cy="21" r="18" fill="none" stroke="#ff44ff" stroke-width="3" stroke-dasharray="113.1" stroke-dashoffset="0" stroke-linecap="round"/></svg></div>
+  <div class="pu-icon" id="pu-boost" style="border-color:#ff4400;background:#ff440022;color:#ff4400">⚡<svg class="pu-ring" viewBox="0 0 42 42"><circle id="pu-ring-boost" cx="21" cy="21" r="18" fill="none" stroke="#ff4400" stroke-width="3" stroke-dasharray="113.1" stroke-dashoffset="0" stroke-linecap="round"/></svg></div>
 </div>
 <div id="bonus-pop"></div>
 <div id="countdown-pop"></div>
@@ -227,7 +249,7 @@ const SPAWN_Z=-190,DESPAWN_Z=18,SHIP_Z=2,SHIP_Y0=0.6;
 const SPD0=22,SPD_MAX=110,SPD_INC=0.28,SPD_SLOW=82; // slower increase after ~75% max
 const BASE_FOV=62,MAX_FOV=78;
 const RAMP_H=1.2,RAMP_LEN=24;
-const OT={V_LASER:0,LOW_LASER:1,HIGH_LASER:2,RAMP:3,DUAL_LASER:4,WALL_GATE:5,BOOST_PAD:6,SWEEP_LASER:7};
+const OT={V_LASER:0,LOW_SAW:1,HIGH_SAW:2,RAMP:3,DUAL_LASER:4,WALL_GATE:5,BOOST_PAD:6,SWEEP_LASER:7};
 const PU={SHIELD:0,MAGNET:1,BOOST:2};
 
 // ═══════════════════════════════════════════════════
@@ -239,8 +261,8 @@ const C={
   bodyL:0x0c0c18,    // slightly lighter panel
   cyan:0x00e5ff,     // primary neon
   orange:0xff8833,   // ship accent
-  red:0xff2233,      // low laser
-  yellow:0xffcc00,   // high laser
+  red:0xff2233,      // low saw
+  yellow:0xffcc00,   // high saw
   lcyan:0x00ddff,    // vertical laser
   magenta:0xff44ff,  // magnet
   gold:0xffaa22,     // ramp/coins
@@ -1102,68 +1124,133 @@ function buildShip(){
 const OP=34,CPN=14,PPN=6;
 const obsPool=[],colPool=[],puPool=[];
 
-function mkBeamLaser(type,beamColor,beamY,postH){
-  const g=new THREE.Group();g.userData={type,active:false,lane:-1,lanes:[0,1,2],mt:0};
-  const bL=TW-MARGIN*.5;
-  const sep=.35; // separation between twin beams
-  // Posts with edge
-  for(const s of [-1,1]){
-    tronBox(g,.22,.22,postH,beamColor,s*(TW/2-MARGIN*.3),postH/2,0);
-    const em=new THREE.Mesh(new THREE.SphereBufferGeometry(.3,8,6),new THREE.MeshBasicMaterial({color:beamColor}));
-    em.position.set(s*(TW/2-MARGIN*.3),beamY,0);g.add(em);
+// Helper: creates one spinning saw blade (disc in XY plane, rotates around Z)
+function mkBlade(R,color,nTeeth){
+  const spin=new THREE.Group();spin.userData={isSawSpin:true};
+  const thick=0.12,tH=R*.32,tR=R*.13;
+  const glowBlend={transparent:true,depthWrite:false,blending:THREE.AdditiveBlending};
+  // Disc — dark body + neon edge
+  const dG=new THREE.CylinderBufferGeometry(R,R,thick,24);dG.rotateX(Math.PI/2);
+  spin.add(new THREE.Mesh(dG,darkMat));
+  spin.add(new THREE.LineSegments(new THREE.EdgesGeometry(dG),
+    new THREE.LineBasicMaterial({color,transparent:true,opacity:.6})));
+  // Bright outer rim — thick neon ring
+  spin.add(new THREE.Mesh(new THREE.TorusBufferGeometry(R,.07,6,32),
+    new THREE.MeshBasicMaterial({color,...glowBlend,opacity:.9})));
+  // Outer rim glow halo — wider, softer
+  spin.add(new THREE.Mesh(new THREE.TorusBufferGeometry(R,.22,6,32),
+    new THREE.MeshBasicMaterial({color,...glowBlend,opacity:.15})));
+  // Inner rim
+  spin.add(new THREE.Mesh(new THREE.TorusBufferGeometry(R*.55,.04,4,20),
+    new THREE.MeshBasicMaterial({color,...glowBlend,opacity:.4})));
+  // Teeth
+  for(let i=0;i<nTeeth;i++){
+    const a=i*(Math.PI*2/nTeeth);
+    const cG=new THREE.ConeBufferGeometry(tR,tH,4);
+    const t=new THREE.Mesh(cG,new THREE.MeshBasicMaterial({color,...glowBlend,opacity:.65}));
+    t.position.set(Math.cos(a)*R,Math.sin(a)*R,0);t.rotation.z=a-Math.PI/2;spin.add(t);
+    const e=new THREE.LineSegments(new THREE.EdgesGeometry(cG),new THREE.LineBasicMaterial({color:C.white,transparent:true,opacity:.4}));
+    e.position.copy(t.position);e.rotation.copy(t.rotation);spin.add(e);
   }
-  // TWO DISTINCT PARALLEL BEAMS
-  for(const offset of [-sep,sep]){
-    const by=beamY+offset;
-    // Outer beam
-    const bG=new THREE.CylinderBufferGeometry(.1,.1,bL,8);bG.rotateZ(Math.PI/2);
-    g.add(new THREE.Mesh(bG,new THREE.MeshBasicMaterial({color:beamColor,transparent:true,opacity:.9})).translateY(by));
-    // Core
-    const cG=new THREE.CylinderBufferGeometry(.04,.04,bL,6);cG.rotateZ(Math.PI/2);
-    g.add(new THREE.Mesh(cG,new THREE.MeshBasicMaterial({color:C.white,transparent:true,opacity:.8})).translateY(by));
-    // Per-beam glow
-    const glMat=new THREE.MeshBasicMaterial({color:beamColor,transparent:true,opacity:.12,side:THREE.DoubleSide});
-    g.add(new THREE.Mesh(new THREE.PlaneBufferGeometry(bL,1.2),glMat).translateY(by));
+  // Hub — neon core
+  const hG=new THREE.CylinderBufferGeometry(R*.18,R*.18,thick*3,6);hG.rotateX(Math.PI/2);
+  spin.add(new THREE.Mesh(hG,darkMat));
+  spin.add(new THREE.LineSegments(new THREE.EdgesGeometry(hG),new THREE.LineBasicMaterial({color,transparent:true,opacity:.8})));
+  spin.add(new THREE.Mesh(new THREE.SphereBufferGeometry(R*.12,6,4),new THREE.MeshBasicMaterial({color,...glowBlend,opacity:.9})));
+  // Hub glow sphere
+  spin.add(new THREE.Mesh(new THREE.SphereBufferGeometry(R*.25,8,6),new THREE.MeshBasicMaterial({color,...glowBlend,opacity:.15})));
+  // Spokes — neon lines
+  for(let i=0;i<4;i++){const a=i*(Math.PI/2);neonLine(spin,color,0,0,0,Math.cos(a)*(R-.15),Math.sin(a)*(R-.15),0);}
+  // Glow disc — front face
+  spin.add(new THREE.Mesh(new THREE.CircleBufferGeometry(R*.85,16),
+    new THREE.MeshBasicMaterial({color,...glowBlend,opacity:.12,side:THREE.DoubleSide})));
+  // Crossed glow planes for volumetric depth
+  for(let a=0;a<3;a++){
+    const pl=new THREE.Mesh(new THREE.PlaneBufferGeometry(R*1.8,R*1.8),
+      new THREE.MeshBasicMaterial({color,...glowBlend,opacity:.06,side:THREE.DoubleSide}));
+    pl.rotation.z=a*Math.PI/3;spin.add(pl);
   }
-  // Shared wide glow encompassing both beams
-  const sgMat=new THREE.MeshBasicMaterial({color:beamColor,transparent:true,opacity:.08,side:THREE.DoubleSide});
-  g.add(new THREE.Mesh(new THREE.PlaneBufferGeometry(bL,3),sgMat).translateY(beamY));
-  const sg2=new THREE.Mesh(new THREE.PlaneBufferGeometry(bL,3),sgMat);sg2.translateY(beamY);sg2.rotation.y=Math.PI/2;g.add(sg2);
-  // Floor reflection
-  const flr=new THREE.Mesh(new THREE.PlaneBufferGeometry(bL*.7,.6),
-    new THREE.MeshBasicMaterial({color:beamColor,transparent:true,opacity:.1}));
+  return spin;
+}
+
+// LOW_SAW — 3 small blades rising from the floor (jump over!)
+function mkFloorSaws(){
+  const g=new THREE.Group();g.userData={type:OT.LOW_SAW,active:false,lane:-1,lanes:[0,1,2],mt:0};
+  const color=C.red,R=1.1;
+  const bladeY=R+0.05; // sit on floor
+
+  // One blade per lane
+  for(let li=0;li<3;li++){
+    const blade=mkBlade(R,color,10);
+    blade.position.set((li-1)*LW,bladeY,0);
+    // Alternate spin direction for visual interest
+    blade.userData.spinDir=(li%2===0)?1:-1;
+    g.add(blade);
+    // Floor mount post under blade
+    tronBox(g,.18,bladeY-.05,.18,color,(li-1)*LW,(bladeY-.05)/2,0);
+    // Mount glow
+    const em=new THREE.Mesh(new THREE.SphereBufferGeometry(.15,6,4),
+      new THREE.MeshBasicMaterial({color,transparent:true,opacity:.5,depthWrite:false,blending:THREE.AdditiveBlending}));
+    em.position.set((li-1)*LW,bladeY,0);g.add(em);
+  }
+  // Floor glow strip
+  const flr=new THREE.Mesh(new THREE.PlaneBufferGeometry(TW*.5,1.2),
+    new THREE.MeshBasicMaterial({color,transparent:true,opacity:.08}));
   flr.rotation.x=-Math.PI/2;flr.position.set(0,.01,0);g.add(flr);
-  // Ceiling reflection
-  const clr=new THREE.Mesh(new THREE.PlaneBufferGeometry(bL*.5,.3),
-    new THREE.MeshBasicMaterial({color:beamColor,transparent:true,opacity:.05}));
-  clr.rotation.x=Math.PI/2;clr.position.set(0,WH-.01,0);g.add(clr);
-  // Warning arrows on LOW_LASER (red) — upward arrows above beam
-  if(type===OT.LOW_LASER){
-    for(let ai=0;ai<3;ai++){
-      const ay=beamY+1.0+ai*.6;
-      const r=.22-.04*ai, h=.45;
-      const aM=new THREE.Mesh(new THREE.ConeBufferGeometry(r,h,4),
-        new THREE.MeshBasicMaterial({color:beamColor,transparent:true,opacity:.75-.12*ai,depthWrite:false,blending:THREE.AdditiveBlending}));
-      aM.position.set(0,ay,0);g.add(aM);
-      const aL=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.ConeBufferGeometry(r,h,4)),
-        new THREE.LineBasicMaterial({color:C.white,transparent:true,opacity:.5}));
-      aL.position.set(0,ay,0);g.add(aL);
-    }
+
+  // Warning arrows pointing UP (jump!)
+  for(let ai=0;ai<3;ai++){
+    const ay=bladeY+R+0.4+ai*.5;
+    const r=.18-.03*ai,h=.38;
+    const aM=new THREE.Mesh(new THREE.ConeBufferGeometry(r,h,4),
+      new THREE.MeshBasicMaterial({color,transparent:true,opacity:.65-.1*ai,depthWrite:false,blending:THREE.AdditiveBlending}));
+    aM.position.set(0,ay,0);g.add(aM);
+    g.add(new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.ConeBufferGeometry(r,h,4)),
+      new THREE.LineBasicMaterial({color:C.white,transparent:true,opacity:.4})).translateY(ay));
   }
-  // Warning arrows on HIGH_LASER (yellow) — downward arrows below beam
-  if(type===OT.HIGH_LASER){
-    for(let ai=0;ai<3;ai++){
-      const ay=beamY-1.0-ai*.6;
-      const r=.22-.04*ai, h=.45;
-      const aM=new THREE.Mesh(new THREE.ConeBufferGeometry(r,h,4),
-        new THREE.MeshBasicMaterial({color:beamColor,transparent:true,opacity:.75-.12*ai,depthWrite:false,blending:THREE.AdditiveBlending}));
-      aM.rotation.z=Math.PI; // flip upside down
-      aM.position.set(0,ay,0);g.add(aM);
-      const aL=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.ConeBufferGeometry(r,h,4)),
-        new THREE.LineBasicMaterial({color:C.white,transparent:true,opacity:.5}));
-      aL.rotation.z=Math.PI;
-      aL.position.set(0,ay,0);g.add(aL);
-    }
+  return g;
+}
+
+// HIGH_SAW — wall of blades hanging from ceiling (duck under!)
+function mkCeilingSaws(){
+  const g=new THREE.Group();g.userData={type:OT.HIGH_SAW,active:false,lane:-1,lanes:[0,1,2],mt:0};
+  const color=C.yellow,R=1.6;
+  const bladeY=3.2; // center height: bottom at ~1.6, top at ~4.8
+
+  // 3 overlapping blades for "wall" effect, tighter spacing
+  const xPos=[-1.9,0,1.9];
+  for(let i=0;i<3;i++){
+    const blade=mkBlade(R,color,12);
+    blade.position.set(xPos[i],bladeY,0);
+    blade.userData.spinDir=(i%2===0)?1:-1;
+    g.add(blade);
+    // Ceiling mount post (from ceiling DOWN to blade center)
+    const postLen=WH-bladeY;
+    tronBox(g,.18,postLen,.18,color,xPos[i],bladeY+postLen/2,0);
+    // Mount glow at connection
+    const em=new THREE.Mesh(new THREE.SphereBufferGeometry(.15,6,4),
+      new THREE.MeshBasicMaterial({color,transparent:true,opacity:.5,depthWrite:false,blending:THREE.AdditiveBlending}));
+    em.position.set(xPos[i],bladeY+R*.3,0);g.add(em);
+  }
+  // Horizontal ceiling bar across tunnel
+  const barGeo=new THREE.CylinderBufferGeometry(.07,.07,TW*.5,6);barGeo.rotateZ(Math.PI/2);
+  const bar=new THREE.Mesh(barGeo,new THREE.MeshBasicMaterial({color,transparent:true,opacity:.4}));
+  bar.position.y=WH-.4;g.add(bar);
+  // Ceiling glow
+  const clr=new THREE.Mesh(new THREE.PlaneBufferGeometry(TW*.5,1.5),
+    new THREE.MeshBasicMaterial({color,transparent:true,opacity:.06}));
+  clr.rotation.x=Math.PI/2;clr.position.set(0,WH-.01,0);g.add(clr);
+
+  // Warning arrows pointing DOWN (duck!)
+  for(let ai=0;ai<3;ai++){
+    const ay=bladeY-R-0.4-ai*.5;
+    const r=.18-.03*ai,h=.38;
+    const aM=new THREE.Mesh(new THREE.ConeBufferGeometry(r,h,4),
+      new THREE.MeshBasicMaterial({color,transparent:true,opacity:.65-.1*ai,depthWrite:false,blending:THREE.AdditiveBlending}));
+    aM.rotation.z=Math.PI;aM.position.set(0,ay,0);g.add(aM);
+    const aL=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.ConeBufferGeometry(r,h,4)),
+      new THREE.LineBasicMaterial({color:C.white,transparent:true,opacity:.4}));
+    aL.rotation.z=Math.PI;aL.position.set(0,ay,0);g.add(aL);
   }
   return g;
 }
@@ -1249,22 +1336,27 @@ function mkDualLaser(){
     }
     g.add(sub);
   }
-  // Horizontal bridge beam connecting the two columns
-  const bridgeMat=new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:.3,depthWrite:false,blending:THREE.AdditiveBlending});
-  const bridgeGeo=new THREE.CylinderBufferGeometry(.06,.06,1,6);
-  bridgeGeo.rotateZ(Math.PI/2);
-  const bridge=new THREE.Mesh(bridgeGeo,bridgeMat);
-  bridge.position.y=WH*.4;bridge.userData={isBridge:true};g.add(bridge);
-  // Bridge glow plane
-  const bgMat=new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:.06,side:THREE.DoubleSide,depthWrite:false,blending:THREE.AdditiveBlending});
-  const bgPlane=new THREE.Mesh(new THREE.PlaneBufferGeometry(1,1.2),bgMat);
-  bgPlane.position.y=WH*.4;bgPlane.userData={isBridge:true};g.add(bgPlane);
+  // Light wall connecting the two columns (floor to ceiling, only shown when adjacent)
+  const bh=h; // full column height
+  const wallMat=new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:.08,side:THREE.DoubleSide,depthWrite:false,blending:THREE.AdditiveBlending});
+  const bWall=new THREE.Mesh(new THREE.PlaneBufferGeometry(1,bh),wallMat);
+  bWall.position.y=bh/2;bWall.userData={isBridge:true};g.add(bWall);
+  // Second crossed plane for volumetric depth
+  const bWall2=new THREE.Mesh(new THREE.PlaneBufferGeometry(1,bh),wallMat.clone());
+  bWall2.position.y=bh/2;bWall2.rotation.y=Math.PI/2;bWall2.userData={isBridge:true};g.add(bWall2);
+  // Horizontal neon lines at intervals across the bridge
+  for(let by=0.5;by<bh;by+=1.6){
+    const bLine=new THREE.Mesh(
+      new THREE.CylinderBufferGeometry(.03,.03,1,4).rotateZ(Math.PI/2),
+      new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:.35,depthWrite:false,blending:THREE.AdditiveBlending}));
+    bLine.position.y=by;bLine.userData={isBridge:true};g.add(bLine);
+  }
   return g;
 }
 
 function mkWallGate(){
   const g=new THREE.Group();g.userData={type:OT.WALL_GATE,active:false,lane:-1,lanes:[],mt:0,runLights:[]};
-  const wallH=7,wallD=25,wallW=LW*1.1;
+  const wallH=7,wallD=38,wallW=LW*1.1;
   const wc=C.red;
   for(let wi=0;wi<2;wi++){
     const wall=new THREE.Group();wall.userData={wallIndex:wi};
@@ -1442,12 +1534,8 @@ function mkSweepLaser(){
 function mkObs(type){
   let g;
   if(type===OT.V_LASER) g=mkVLaser();
-  else if(type===OT.LOW_LASER){
-    g=mkBeamLaser(type,C.red,0.5,0.9);
-  }
-  else if(type===OT.HIGH_LASER){
-    g=mkBeamLaser(type,C.yellow,2.0,2.8);
-  }
+  else if(type===OT.LOW_SAW) g=mkFloorSaws();
+  else if(type===OT.HIGH_SAW) g=mkCeilingSaws();
   else if(type===OT.RAMP) g=mkRamp();
   else if(type===OT.DUAL_LASER) g=mkDualLaser();
   else if(type===OT.WALL_GATE) g=mkWallGate();
@@ -1523,7 +1611,7 @@ function mkPU(type){
 }
 
 function initPools(){
-  const types=[OT.V_LASER,OT.V_LASER,OT.V_LASER,OT.V_LASER,OT.LOW_LASER,OT.LOW_LASER,OT.HIGH_LASER,OT.HIGH_LASER,OT.RAMP,OT.RAMP,OT.RAMP,OT.RAMP,OT.RAMP,OT.RAMP,OT.DUAL_LASER,OT.DUAL_LASER,OT.DUAL_LASER,OT.WALL_GATE,OT.WALL_GATE,OT.WALL_GATE,OT.BOOST_PAD,OT.BOOST_PAD,OT.BOOST_PAD,OT.SWEEP_LASER,OT.SWEEP_LASER,OT.SWEEP_LASER];
+  const types=[OT.V_LASER,OT.V_LASER,OT.V_LASER,OT.V_LASER,OT.LOW_SAW,OT.LOW_SAW,OT.HIGH_SAW,OT.HIGH_SAW,OT.RAMP,OT.RAMP,OT.RAMP,OT.RAMP,OT.RAMP,OT.RAMP,OT.DUAL_LASER,OT.DUAL_LASER,OT.DUAL_LASER,OT.WALL_GATE,OT.WALL_GATE,OT.WALL_GATE,OT.BOOST_PAD,OT.BOOST_PAD,OT.BOOST_PAD,OT.SWEEP_LASER,OT.SWEEP_LASER,OT.SWEEP_LASER];
   for(let i=0;i<OP;i++) obsPool.push(mkObs(types[i%types.length]));
   for(let i=0;i<CPN;i++) colPool.push(mkCol());
   for(let i=0;i<PPN;i++) puPool.push(mkPU(i%3));
@@ -1585,22 +1673,24 @@ function spawnO(){
   let closestZ=SPAWN_Z+999,closestHZ=SPAWN_Z+999,closestRampZ=SPAWN_Z+999,closestWGZ=SPAWN_Z+999;
   for(const o of aObs){
     if(o.position.z<closestZ) closestZ=o.position.z;
-    if((o.userData.type===OT.LOW_LASER||o.userData.type===OT.HIGH_LASER||o.userData.type===OT.DUAL_LASER||o.userData.type===OT.WALL_GATE)&&o.position.z<closestHZ) closestHZ=o.position.z;
+    if((o.userData.type===OT.LOW_SAW||o.userData.type===OT.HIGH_SAW||o.userData.type===OT.DUAL_LASER||o.userData.type===OT.WALL_GATE)&&o.position.z<closestHZ) closestHZ=o.position.z;
     if(o.userData.type===OT.RAMP&&o.position.z<closestRampZ) closestRampZ=o.position.z;
     if(o.userData.type===OT.WALL_GATE&&o.position.z<closestWGZ) closestWGZ=o.position.z;
   }
   if(closestZ-SPAWN_Z<10) return; // min 10 gap from ANY obstacle
   // Safe zone: no obstacles within 80 units behind a WALL_GATE
-  for(const o of aObs){if(o.userData.type===OT.WALL_GATE&&o.position.z-SPAWN_Z<80) return;}
+  for(const o of aObs){if(o.userData.type===OT.WALL_GATE&&o.position.z-SPAWN_Z<100) return;}
+  // Safe zone after saws — reduced visibility, give player breathing room
+  for(const o of aObs){if((o.userData.type===OT.LOW_SAW||o.userData.type===OT.HIGH_SAW)&&o.position.z-SPAWN_Z<40) return;}
   // Pick type candidates
   const ts=[OT.V_LASER,OT.V_LASER,OT.V_LASER];
   const rampOk=closestWGZ-SPAWN_Z>=30; // no ramps within 30 units of a wall gate
   if(diff>=1){ts.push(OT.V_LASER);if(rampOk) ts.push(OT.RAMP,OT.RAMP);}
   if(diff>=2){ts.push(OT.V_LASER,OT.V_LASER);if(rampOk) ts.push(OT.RAMP,OT.RAMP);}
   if(diff>=3) ts.push(OT.V_LASER,OT.V_LASER);
-  // Only allow horizontal lasers if 35+ gap from last horizontal AND 20+ from last ramp
-  if(diff>=1&&(closestHZ-SPAWN_Z>=35)&&(closestRampZ-SPAWN_Z>=20)) ts.push(OT.LOW_LASER);
-  if(diff>=2&&(closestHZ-SPAWN_Z>=35)&&(closestRampZ-SPAWN_Z>=20)) ts.push(OT.HIGH_LASER);
+  // Only allow saws if 35+ gap from last horizontal AND 20+ from last ramp
+  if(diff>=1&&(closestHZ-SPAWN_Z>=35)&&(closestRampZ-SPAWN_Z>=20)) ts.push(OT.LOW_SAW);
+  if(diff>=2&&(closestHZ-SPAWN_Z>=35)&&(closestRampZ-SPAWN_Z>=20)) ts.push(OT.HIGH_SAW);
   // Dual laser: 2 columns blocking 2 lanes
   if(diff>=2&&(closestHZ-SPAWN_Z>=25)) ts.push(OT.DUAL_LASER);
   if(diff>=3&&(closestHZ-SPAWN_Z>=25)) ts.push(OT.DUAL_LASER);
@@ -1616,20 +1706,24 @@ function spawnO(){
   const t=ts[Math.floor(Math.random()*ts.length)];
   const o=gp(obsPool,t);if(!o) return;
   const lane=Math.floor(Math.random()*LANES);
-  if(t===OT.LOW_LASER||t===OT.HIGH_LASER){
+  if(t===OT.LOW_SAW||t===OT.HIGH_SAW){
     o.position.set(0,0,SPAWN_Z);o.userData.active=true;o.userData.lane=-1;o.userData.lanes=[0,1,2];
   } else if(t===OT.DUAL_LASER||t===OT.WALL_GATE){
     const openLane=Math.floor(Math.random()*LANES);
     const blocked=[];for(let l=0;l<LANES;l++) if(l!==openLane) blocked.push(l);
     o.position.set(0,0,SPAWN_Z);o.userData.active=true;o.userData.lane=-1;o.userData.lanes=blocked;
     if(t===OT.DUAL_LASER){
+      const isAdj=Math.abs(blocked[1]-blocked[0])===1;
       let ci=0;for(const c of o.children){
         if(c.userData&&c.userData.colIndex!==undefined){c.position.x=(blocked[ci]-1)*LW;ci++;}
         if(c.userData&&c.userData.isBridge){
-          c.position.x=((blocked[0]+blocked[1])/2-1)*LW;
-          const dist=Math.abs((blocked[1]-blocked[0])*LW);
-          c.scale.x=dist;
-          // Also scale the glow plane next to bridge
+          if(isAdj){
+            c.visible=true;
+            c.position.x=((blocked[0]+blocked[1])/2-1)*LW;
+            c.scale.x=Math.abs((blocked[1]-blocked[0])*LW);
+          } else {
+            c.visible=false; // no bridge when open lane is between columns
+          }
         }
       }
     } else {
@@ -1660,7 +1754,15 @@ function spawnC(){
   }
   const goodLanes=[];for(let i=0;i<LANES;i++) if(!badLanes.has(i)) goodLanes.push(i);
   const l=goodLanes.length>0?goodLanes[Math.floor(Math.random()*goodLanes.length)]:Math.floor(Math.random()*LANES);
-  o.position.set((l-1)*LW,0,SPAWN_Z);o.userData.active=true;o.userData.lane=l;o.visible=true;aCol.push(o);
+  // Check if coin overlaps a ramp in the same lane — if so, raise it on top
+  let coinY=0;
+  for(const ob of aObs){
+    if(ob.userData.type===OT.RAMP&&ob.userData.lane===l){
+      const dz=SPAWN_Z-ob.position.z;
+      if(dz>-RAMP_LEN-2&&dz<4){coinY=RAMP_H;break;}
+    }
+  }
+  o.position.set((l-1)*LW,coinY,SPAWN_Z);o.userData.active=true;o.userData.lane=l;o.visible=true;aCol.push(o);
 }
 function spawnPU(){const t=Math.floor(Math.random()*3),o=gp(puPool,t);if(!o) return;const l=Math.floor(Math.random()*LANES);o.position.set((l-1)*LW,0,SPAWN_Z);o.userData.active=true;o.userData.lane=l;o.visible=true;aPU.push(o);}
 
@@ -1735,15 +1837,15 @@ function collide(){
           if(jumping&&jumpY>2) continue; // can jump over
           if(spinActive) continue;
           if(boostActive){screenShake=.1;emitDeathExplosion(beamX,1.5,oz);rp(o);aObs.splice(i,1);coinScore+=25;showBonus('+25 SMASH!');playSFXSample('boost_smash',0.8);pgBoostSmashes++;continue;}
-          if(shieldActive){shieldActive=false;shieldTimer=0;shieldBubble.visible=false;screenShake=.15;emitPUBurst(ship.position.x,1,SHIP_Z,C.shield);rp(o);aObs.splice(i,1);document.getElementById('pu-shield').classList.remove('active');playShieldHitSFX();pgShieldWasHit=true;pgLastShieldHitMeters=Math.floor(meters);continue;}
+          if(shieldActive){shieldActive=false;shieldTimer=0;shieldBubble.visible=false;screenShake=.15;emitPUBurst(ship.position.x,1,SHIP_Z,C.shield);rp(o);aObs.splice(i,1);document.getElementById('pu-shield').classList.remove('active');setPURing(puRingShield,0);playShieldHitSFX();pgShieldWasHit=true;pgLastShieldHitMeters=Math.floor(meters);continue;}
           return die();
         }
       }
       continue;
     }
     // Z-range check (wider for WALL_GATE due to 3-unit depth)
-    const zFront=t===OT.WALL_GATE?SHIP_Z+13:SHIP_Z+1.5;
-    const zBack=t===OT.WALL_GATE?SHIP_Z-13:SHIP_Z-2;
+    const zFront=t===OT.WALL_GATE?SHIP_Z+20:SHIP_Z+1.5;
+    const zBack=t===OT.WALL_GATE?SHIP_Z-20:SHIP_Z-2;
     if(oz>zFront||oz<zBack) continue;
     if(!o.userData.lanes.includes(curLane)) continue;
     if(onRamp&&t!==OT.WALL_GATE) continue; // WALL_GATE is too tall to ramp over
@@ -1762,15 +1864,12 @@ function collide(){
       let inWall=false;
       for(const bl of o.userData.lanes){if(Math.abs(ship.position.x-(bl-1)*LW)<LW*.5){inWall=true;break;}}
       if(!inWall) continue;
-      // Bounce to open lane instead of dying
-      const openLane=[0,1,2].find(l=>!o.userData.lanes.includes(l));
-      if(openLane!==undefined){curLane=openLane;targetX=(openLane-1)*LW;screenShake=.12;emitSparks(ship.position.x,SHIP_Y0+.5,SHIP_Z,12);continue;}
     }
-    else if(t===OT.LOW_LASER){if(air) continue;}
-    else if(t===OT.HIGH_LASER){if(isDuck||air) continue;}
+    else if(t===OT.LOW_SAW){if(air) continue;}
+    else if(t===OT.HIGH_SAW){if(isDuck) continue;} // ceiling blades — only ducking works
     if(spinActive){continue;} // invincible during barrel roll
     if(boostActive){screenShake=.1;emitDeathExplosion(o.position.x||ship.position.x,1.5,o.position.z);rp(o);aObs.splice(i,1);coinScore+=25;showBonus('+25 SMASH!');playSFXSample('boost_smash',0.8);pgBoostSmashes++;continue;}
-    if(shieldActive){shieldActive=false;shieldTimer=0;shieldBubble.visible=false;screenShake=.15;emitPUBurst(ship.position.x,1,SHIP_Z,C.shield);rp(o);aObs.splice(i,1);document.getElementById('pu-shield').classList.remove('active');playShieldHitSFX();pgShieldWasHit=true;pgLastShieldHitMeters=Math.floor(meters);continue;}
+    if(shieldActive){shieldActive=false;shieldTimer=0;shieldBubble.visible=false;screenShake=.15;emitPUBurst(ship.position.x,1,SHIP_Z,C.shield);rp(o);aObs.splice(i,1);document.getElementById('pu-shield').classList.remove('active');setPURing(puRingShield,0);playShieldHitSFX();pgShieldWasHit=true;pgLastShieldHitMeters=Math.floor(meters);continue;}
     return die();
   }
   for(let i=aCol.length-1;i>=0;i--){
@@ -1795,14 +1894,25 @@ function collide(){
 }
 
 function activatePU(t){
-  if(t===PU.SHIELD){shieldActive=true;shieldTimer=SHIELD_DUR;shieldBubble.visible=true;document.getElementById('pu-shield').classList.add('active');showBonus('SHIELD!');playShieldSFX();pgShieldsUsed++;hdData.totalShields++;checkInstantAch();}
-  else if(t===PU.MAGNET){magnetActive=true;magnetTimer=MAGNET_DUR;document.getElementById('pu-magnet').classList.add('active');showBonus('MAGNET!');playMagnetSFX();pgMagnetsUsed++;hdData.totalMagnets++;checkInstantAch();}
-  else{boostActive=true;boostTimer=BOOST_DUR;boostSpd=BOOST_SPD;boostBubble.visible=true;document.getElementById('pu-boost').classList.add('active');showBonus('BOOST!');playBoostSFX();pgBoostsUsed++;hdData.totalBoosts++;checkInstantAch();}
+  if(t===PU.SHIELD){shieldActive=true;shieldTimer=SHIELD_DUR;shieldBubble.visible=true;document.getElementById('pu-shield').classList.add('active');puRingShield.style.strokeDashoffset=0;showBonus('SHIELD!');playShieldSFX();pgShieldsUsed++;hdData.totalShields++;checkInstantAch();}
+  else if(t===PU.MAGNET){magnetActive=true;magnetTimer=MAGNET_DUR;document.getElementById('pu-magnet').classList.add('active');puRingMagnet.style.strokeDashoffset=0;showBonus('MAGNET!');playMagnetSFX();pgMagnetsUsed++;hdData.totalMagnets++;checkInstantAch();}
+  else{boostActive=true;boostTimer=BOOST_DUR;boostSpd=BOOST_SPD;boostBubble.visible=true;document.getElementById('pu-boost').classList.add('active');puRingBoost.style.strokeDashoffset=0;showBonus('BOOST!');playBoostSFX();pgBoostsUsed++;hdData.totalBoosts++;checkInstantAch();}
 }
+const PU_CIRC=113.1; // 2*π*18
+const puRingShield=document.getElementById('pu-ring-shield');
+const puRingMagnet=document.getElementById('pu-ring-magnet');
+const puRingBoost=document.getElementById('pu-ring-boost');
+function setPURing(el,frac){el.style.strokeDashoffset=PU_CIRC*(1-Math.max(0,Math.min(1,frac)));}
 function updatePU(){
-  if(shieldActive){shieldTimer-=dt;shieldBubble.material.opacity=.1+Math.sin(elapsed*6)*.06;if(shieldTimer<=0){shieldActive=false;shieldBubble.visible=false;document.getElementById('pu-shield').classList.remove('active');}}
-  if(magnetActive){magnetTimer-=dt;if(magnetTimer<=0){magnetActive=false;document.getElementById('pu-magnet').classList.remove('active');}}
-  if(boostActive){boostTimer-=dt;boostBubble.material.opacity=.08+Math.sin(elapsed*10)*.06;if(boostTimer<=0){boostActive=false;boostSpd=0;boostBubble.visible=false;document.getElementById('pu-boost').classList.remove('active');}}
+  if(shieldActive){setPURing(puRingShield,shieldTimer/SHIELD_DUR);
+    shieldTimer-=dt;shieldBubble.material.opacity=.1+Math.sin(elapsed*6)*.06;
+    if(shieldTimer<=0){shieldActive=false;shieldBubble.visible=false;document.getElementById('pu-shield').classList.remove('active');setPURing(puRingShield,0);}}
+  if(magnetActive){setPURing(puRingMagnet,magnetTimer/MAGNET_DUR);
+    magnetTimer-=dt;
+    if(magnetTimer<=0){magnetActive=false;document.getElementById('pu-magnet').classList.remove('active');setPURing(puRingMagnet,0);}}
+  if(boostActive){setPURing(puRingBoost,boostTimer/BOOST_DUR);
+    boostTimer-=dt;boostBubble.material.opacity=.08+Math.sin(elapsed*10)*.06;
+    if(boostTimer<=0){boostActive=false;boostSpd=0;boostBubble.visible=false;document.getElementById('pu-boost').classList.remove('active');setPURing(puRingBoost,0);}}
 }
 
 // ═══════════════════════════════════════════════════
@@ -1863,6 +1973,7 @@ let bestScore=hdData.bestScore;
 
 function togglePause(){
   if(gs!=='playing'&&gs!=='countdown'&&!paused) return;
+  playSFXSample('menu_click',0.5);
   paused=!paused;
   const po=document.getElementById('pause-overlay');
   const pb=document.getElementById('pause-btn');
@@ -2092,9 +2203,9 @@ document.addEventListener('keydown',e=>{
   if(e.key==='p'||e.key==='P'||e.key==='Escape'){if(gs==='playing'||gs==='countdown'||paused){e.preventDefault();togglePause();return;}}
   if(paused){
     const r=document.getElementById('pause-resume');
-    if(e.key==='ArrowDown'||e.key==='s'||e.key==='S'){e.preventDefault();r.classList.add('menu-focused');}
-    else if(e.key==='ArrowUp'||e.key==='w'||e.key==='W'){e.preventDefault();r.classList.remove('menu-focused');}
-    else if(e.key==='Enter'||e.key===' '){e.preventDefault();if(r.classList.contains('menu-focused')){r.classList.remove('menu-focused');togglePause();}}
+    if(e.key==='ArrowDown'||e.key==='s'||e.key==='S'){e.preventDefault();r.classList.add('menu-focused');playSFXSample('menu_click',0.5);}
+    else if(e.key==='ArrowUp'||e.key==='w'||e.key==='W'){e.preventDefault();r.classList.remove('menu-focused');playSFXSample('menu_click',0.5);}
+    else if(e.key==='Enter'||e.key===' '){e.preventDefault();if(r.classList.contains('menu-focused')){r.classList.remove('menu-focused');playSFXSample('menu_click',0.5);togglePause();}}
     return;
   }
   const inMenu=gs==='menu'||gs==='dead';
@@ -2107,30 +2218,30 @@ document.addEventListener('keydown',e=>{
     // Get focusable items in current tab
     const items=getMenuItems(curTab);
     // Tab cycles tabs
-    if(e.key==='Tab'){switchTab(tabs[(ci+1)%tabs.length]);menuFocus=-1;updateMenuFocus();return;}
+    if(e.key==='Tab'){switchTab(tabs[(ci+1)%tabs.length]);menuFocus=-1;updateMenuFocus();playSFXSample('menu_click',0.5);return;}
     // Left/Right switch tabs (when focus on tab bar)
     if(e.key==='ArrowLeft'){
-      if(menuFocus<0&&ci>0){switchTab(tabs[ci-1]);menuFocus=-1;updateMenuFocus();}
+      if(menuFocus<0&&ci>0){switchTab(tabs[ci-1]);menuFocus=-1;updateMenuFocus();playSFXSample('menu_click',0.5);}
       return;
     }
     if(e.key==='ArrowRight'){
-      if(menuFocus<0&&ci<tabs.length-1){switchTab(tabs[ci+1]);menuFocus=-1;updateMenuFocus();}
+      if(menuFocus<0&&ci<tabs.length-1){switchTab(tabs[ci+1]);menuFocus=-1;updateMenuFocus();playSFXSample('menu_click',0.5);}
       return;
     }
     // Down enters content / moves down
     if(e.key==='ArrowDown'||e.key==='s'||e.key==='S'){
-      if(items.length>0){menuFocus=Math.min(menuFocus+1,items.length-1);updateMenuFocus();}
+      if(items.length>0){menuFocus=Math.min(menuFocus+1,items.length-1);updateMenuFocus();playSFXSample('menu_click',0.5);}
       return;
     }
     // Up goes back up
     if(e.key==='ArrowUp'||e.key==='w'||e.key==='W'){
-      menuFocus=Math.max(-1,menuFocus-1);updateMenuFocus();
+      menuFocus=Math.max(-1,menuFocus-1);updateMenuFocus();playSFXSample('menu_click',0.5);
       return;
     }
     // Enter/Space activates focused item
     if(e.key==='Enter'||e.key===' '){
-      if(menuFocus>=0&&menuFocus<items.length){items[menuFocus].click();}
-      else if(menuFocus<0&&curTab==='play') start();
+      if(menuFocus>=0&&menuFocus<items.length){playSFXSample('menu_click',0.5);items[menuFocus].click();}
+      else if(menuFocus<0&&curTab==='play'){playSFXSample('menu_click',0.5);start();}
       return;
     }
     return;
@@ -2166,8 +2277,8 @@ document.addEventListener('touchend',e=>{
   holdingJump=false;touchActive=false;
   if(!tSwiped){if(gs==='playing'||gs==='countdown') doJump(); else start();}
 },{passive:false});
-document.getElementById('start-btn').addEventListener('click',start);
-document.getElementById('menu-btn').addEventListener('click',()=>{
+document.getElementById('start-btn').addEventListener('click',()=>{playSFXSample('menu_click',0.5);start();});
+document.getElementById('menu-btn').addEventListener('click',()=>{playSFXSample('menu_click',0.5);
   gs='menu';
   document.getElementById('game-title').innerHTML='HOVER<br>DASH';
   document.getElementById('game-subtitle').textContent='Lane Runner';
@@ -2188,7 +2299,7 @@ function switchTab(name){
   if(name==='trophies') renderTrophyGrid();
   menuFocus=-1;updateMenuFocus();
 }
-document.querySelectorAll('.tab-btn').forEach(b=>b.addEventListener('click',()=>switchTab(b.dataset.tab)));
+document.querySelectorAll('.tab-btn').forEach(b=>b.addEventListener('click',()=>{playSFXSample('menu_click',0.5);switchTab(b.dataset.tab);}));
 
 function renderTrophyGrid(){
   const grid=document.getElementById('trophy-grid');grid.innerHTML='';
@@ -2752,8 +2863,10 @@ function loadSFX(name,url){
   fetch(url).then(r=>r.arrayBuffer()).then(ab=>audioCtx.decodeAudioData(ab,buf=>{sfxBuffers[name]=buf;})).catch(e=>console.warn('SFX load error:',name,e));
 }
 function playSFXSample(name,vol){
-  if(!sfxEnabled||!audioCtx||!sfxBuffers[name]) return;
+  if(!sfxEnabled) return;
+  if(!audioCtx){initAudio();preloadAllSFX();}
   audioCtx.resume();
+  if(!sfxBuffers[name]) return;
   const src=audioCtx.createBufferSource();src.buffer=sfxBuffers[name];
   const g=audioCtx.createGain();g.gain.value=vol||1;
   src.connect(g);g.connect(audioCtx.destination);
@@ -2765,7 +2878,18 @@ function preloadAllSFX(){
   loadSFX('go','go.mp3');
   loadSFX('wave_clear','wave_clear.mp3');
   loadSFX('wave_start','wave_start.mp3');
+  loadSFX('menu_click','select_001.mp3');
 }
+// Safari requires click/touch to unlock AudioContext — init on first gesture
+function unlockAudio(){
+  if(!audioCtx) initAudio();
+  audioCtx.resume();
+  preloadAllSFX();
+  document.removeEventListener('click',unlockAudio);
+  document.removeEventListener('touchend',unlockAudio);
+}
+document.addEventListener('click',unlockAudio);
+document.addEventListener('touchend',unlockAudio);
 
 // ── AUDIO: iOS-compatible BufferSource + analyser ──
 let decodedBuffer=null,synthNodes=[];
@@ -2799,6 +2923,7 @@ function stopMusic(){
 
 function toggleMusic(){
   if(!audioCtx) initAudio();
+  playSFXSample('menu_click',0.5);
   musicEnabled=!musicEnabled;
   localStorage.setItem('hd_music',musicEnabled?'1':'0');
   const btn=document.getElementById('music-btn');
@@ -2811,6 +2936,7 @@ function toggleMusic(){
   }
 }
 function toggleSFX(){
+  playSFXSample('menu_click',0.5);
   sfxEnabled=!sfxEnabled;
   localStorage.setItem('hd_sfx',sfxEnabled?'1':'0');
   const btn=document.getElementById('sfx-btn');
@@ -2944,6 +3070,23 @@ function loop(){
           }
         }
       }
+      // Animate saw blade rotation + neon pulse
+      if(o.userData.type===OT.LOW_SAW||o.userData.type===OT.HIGH_SAW){
+        const pulse=0.85+Math.sin(elapsed*6)*.15; // 0.7–1.0 opacity pulse
+        for(const ch of o.children){
+          if(ch.userData&&ch.userData.isSawSpin){
+            const dir=ch.userData.spinDir||1;
+            ch.rotation.z+=dt*3.5*dir;
+            // Pulse the glow/rim meshes for neon throb
+            for(const m of ch.children){
+              if(m.material&&m.material.blending===THREE.AdditiveBlending&&m.material.opacity>0.1){
+                if(!m.userData._baseOp) m.userData._baseOp=m.material.opacity;
+                m.material.opacity=m.userData._baseOp*pulse;
+              }
+            }
+          }
+        }
+      }
       // Animate ramp running lights
       if(o.userData.type===OT.RAMP){
         for(const ch of o.children){
@@ -2966,8 +3109,9 @@ function loop(){
           }
         }
         for(const ch of o.children){
-          if(ch.userData&&ch.userData.isBridge&&ch.material){
-            ch.material.opacity=.2+Math.sin(elapsed*6)*.15;
+          if(ch.userData&&ch.userData.isBridge&&ch.material&&ch.visible){
+            const base=ch.material._baseOp||(ch.material._baseOp=ch.material.opacity);
+            ch.material.opacity=base+Math.sin(elapsed*6)*base*.4;
           }
         }
       }
@@ -2997,8 +3141,8 @@ function loop(){
           }
         }
         // 3-phase tunnel whoosh SFX
-        const wallFront=o.position.z+12.5; // front edge of wall
-        const wallBack=o.position.z-12.5;  // back edge of wall
+        const wallFront=o.position.z+19; // front edge of wall
+        const wallBack=o.position.z-19;  // back edge of wall
         // Phase 1+2: Entry — start tunnel sound when front edge reaches ship
         if(!o.userData.whooshPlayed&&wallFront>=SHIP_Z){
           o.userData.whooshPlayed=true;
@@ -3042,10 +3186,10 @@ function loop(){
         const obsLanes=o.userData.lanes||[o.userData.lane];
         const isInObsLane=obsLanes.includes(curLane);
         const isAdjacent=obsLanes.some(l=>Math.abs(l-curLane)===1);
-        // Also count jumping over LOW_LASER or ducking under HIGH_LASER in same lane
+        // Also count jumping over LOW_SAW or ducking under HIGH_SAW in same lane
         const dodgedInLane=isInObsLane&&(
-          (t2===OT.LOW_LASER&&(jumping||jumpY>0))||
-          (t2===OT.HIGH_LASER&&ducking)
+          (t2===OT.LOW_SAW&&(jumping||jumpY>0))||
+          (t2===OT.HIGH_SAW&&ducking)
         );
         if(isAdjacent||dodgedInLane){
           const pts=5*comboMultiplier;
@@ -3053,7 +3197,7 @@ function loop(){
           playNearMissSFX();screenShake=.03;pgNearMisses++;checkInstantAch();
         }
       }
-      const dz=o.userData.type===OT.RAMP?DESPAWN_Z+RAMP_LEN+2:o.userData.type===OT.WALL_GATE?DESPAWN_Z+16:DESPAWN_Z;
+      const dz=o.userData.type===OT.RAMP?DESPAWN_Z+RAMP_LEN+2:o.userData.type===OT.WALL_GATE?DESPAWN_Z+22:DESPAWN_Z;
       if(o.position.z>dz){if(onRamp&&rampRef===o){onRamp=false;rampRef=null;jumping=true;jumpPhase='fall';jumpVelY=0;stopGrindSFX();}rp(o);aObs.splice(i,1);}
     }
     for(let i=aCol.length-1;i>=0;i--){const c=aCol[i];c.position.z+=eSpd*dt;for(const ch of c.children) ch.rotation.y+=dt*3;if(c.position.z>DESPAWN_Z){rp(c);aCol.splice(i,1);}}
@@ -3235,6 +3379,7 @@ function loop(){
 updateDailyUI();
 loop();
 addEventListener('resize',()=>{cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix();R.setSize(innerWidth,innerHeight);});
+if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js');
 </script>
 </body>
 </html>

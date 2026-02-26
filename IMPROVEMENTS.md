@@ -3,7 +3,7 @@
 ## Kvar att göra
 
 ### Gameplay
-- [ ] Fler hindertyper (Design-fas)
+- [x] Fler hindertyper — sågklingor ersätter horisontella lasrar
 - [ ] Hold för Roll — pausad, återkommer senare
 
 ### Platform / Monetisering
@@ -30,3 +30,4 @@
 | Wave-längd 10–12s (från 7s) | ✓ |
 | Max speed 110 (från 88), display 1–20 | ✓ |
 | Powerup-färger distinkt från coins | ✓ |
+| Sågklingor (LOW_SAW/HIGH_SAW) ersätter horisontella laserstrålar | ✓ |
