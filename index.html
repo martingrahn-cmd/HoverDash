@@ -59,7 +59,7 @@
   #air-score.show{opacity:1}
   #countdown-pop{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-size:120px;font-weight:900;color:#00e5ff;text-shadow:0 0 60px #00e5ff,0 0 120px #00e5ffaa;pointer-events:none;z-index:15;opacity:0;transition:opacity .2s;letter-spacing:-4px}
   #bonus-pop.show{opacity:1;transform:translate(-50%,-60%)}
-  #perf{position:fixed;bottom:8px;right:12px;font-size:11px;font-family:monospace;color:#44ff88;opacity:.5;pointer-events:none;z-index:10}
+
   #pause-overlay{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:25;background:radial-gradient(ellipse at center,#050508cc 0%,#050508ee 70%);opacity:0;pointer-events:none;transition:opacity .25s}
   #pause-overlay.show{opacity:1;pointer-events:auto}
   #pause-title{font-size:clamp(48px,10vw,72px);font-weight:900;color:#00e5ff;text-shadow:0 0 30px #00e5ff88,0 0 60px #00e5ff44;letter-spacing:6px;margin-bottom:20px}
@@ -131,6 +131,16 @@
   .setting-label{font-size:14px;font-weight:700;letter-spacing:3px;color:#aab}
   .setting-toggle{padding:6px 20px;font-size:13px;font-weight:700;letter-spacing:2px;cursor:pointer;border-radius:3px;font-family:inherit;transition:all .2s;border:1px solid #ff445566;color:#ff4455;background:transparent}
   .setting-toggle.on{border-color:#44ff8866;color:#44ff88}
+  /* HOW TO PLAY */
+  #guide-wrap{overflow-y:auto;max-height:60vh;width:min(90vw,380px);padding:0 8px;scrollbar-width:thin;scrollbar-color:#00e5ff33 transparent}
+  #guide-wrap::-webkit-scrollbar{width:4px}
+  #guide-wrap::-webkit-scrollbar-thumb{background:#00e5ff44;border-radius:2px}
+  .guide-title{font-size:clamp(28px,6vw,42px);font-weight:900;color:#00e5ff;text-shadow:0 0 20px #00e5ff66;letter-spacing:4px;margin-bottom:16px;text-align:center}
+  .guide-section{font-size:12px;font-weight:700;letter-spacing:3px;color:#00e5ff;margin:16px 0 8px;padding-bottom:4px;border-bottom:1px solid #00e5ff33}
+  .guide-row{display:flex;justify-content:space-between;align-items:baseline;padding:4px 0;font-size:13px;color:#99a;line-height:1.5}
+  .guide-row .gl{color:#aab;font-weight:600}
+  .guide-row .gv{color:#44ffaa;font-weight:700;text-align:right;white-space:nowrap;margin-left:12px}
+  .guide-note{font-size:11px;color:#556;margin-top:2px;line-height:1.4}
   /* MENU FOCUS */
   .menu-focused{outline:none !important;box-shadow:0 0 0 3px #fff,0 0 20px #ffffffaa !important;transform:scale(1.08);background:#fff !important;color:#050508 !important;border-color:#fff !important}
   /* DAILY CHALLENGE CARD */
@@ -177,7 +187,7 @@
 <div id="air-score"></div>
 <div id="countdown-pop"></div>
 <div id="lane-dots"><div class="lane-dot" id="ld-0"></div><div class="lane-dot" id="ld-1"></div><div class="lane-dot" id="ld-2"></div></div>
-<div id="perf"></div>
+
 <button id="pause-btn" data-state="playing" onclick="togglePause()"></button>
 <div id="pause-overlay">
   <div id="pause-title">PAUSED</div>
@@ -189,6 +199,7 @@
   <div id="tab-bar">
     <button class="tab-btn active" data-tab="play">PLAY</button>
     <button class="tab-btn" data-tab="trophies">TROPHIES</button>
+    <button class="tab-btn" data-tab="guide">GUIDE</button>
     <button class="tab-btn" data-tab="settings">SETTINGS</button>
   </div>
   <div id="tab-play" class="tab-content active">
@@ -215,6 +226,42 @@
   <div id="tab-trophies" class="tab-content">
     <div id="trophy-header"><div id="trophy-title">TROPHIES</div><div id="trophy-count">0 / 30</div></div>
     <div id="trophy-grid"></div>
+  </div>
+  <div id="tab-guide" class="tab-content">
+    <div class="guide-title">HOW TO PLAY</div>
+    <div id="guide-wrap">
+      <div class="guide-section">CONTROLS</div>
+      <div class="guide-row"><span class="gl">Switch lanes</span><span class="gv">A D / ← →</span></div>
+      <div class="guide-row"><span class="gl">Jump (hold to float)</span><span class="gv">W ↑ SPACE</span></div>
+      <div class="guide-row"><span class="gl">Duck</span><span class="gv">S ↓</span></div>
+      <div class="guide-row"><span class="gl">Pause</span><span class="gv">P / ESC</span></div>
+      <div class="guide-note">Swipe left/right/down on mobile</div>
+
+      <div class="guide-section">SCORING</div>
+      <div class="guide-row"><span class="gl">Score</span><span class="gv">meters + coins</span></div>
+      <div class="guide-row"><span class="gl">Coin</span><span class="gv">+10 × combo</span></div>
+      <div class="guide-row"><span class="gl">Ramp grinding</span><span class="gv">30 pts/sec</span></div>
+      <div class="guide-note">Combo builds per coin, resets after 2s. Max x10</div>
+
+      <div class="guide-section">BONUS POINTS</div>
+      <div class="guide-row"><span class="gl">Near miss</span><span class="gv">+5 × combo</span></div>
+      <div class="guide-row"><span class="gl">Boost pad</span><span class="gv">+30 × combo</span></div>
+      <div class="guide-row"><span class="gl">Airtime (1.5s+)</span><span class="gv">secs² × 3 × combo</span></div>
+      <div class="guide-row"><span class="gl">Ramp launch</span><span class="gv">+50</span></div>
+      <div class="guide-row"><span class="gl">Barrel roll</span><span class="gv">+15</span></div>
+      <div class="guide-row"><span class="gl">Boost smash</span><span class="gv">+25</span></div>
+
+      <div class="guide-section">POWER-UPS</div>
+      <div class="guide-row"><span class="gl">🛡 Shield (6s)</span><span class="gv">absorbs 1 hit</span></div>
+      <div class="guide-row"><span class="gl">🧲 Magnet (8s)</span><span class="gv">pulls coins to you</span></div>
+      <div class="guide-row"><span class="gl">⚡ Boost (4s)</span><span class="gv">speed + smash obstacles</span></div>
+
+      <div class="guide-section">OBSTACLES</div>
+      <div class="guide-row"><span class="gl">Red saw blades (floor)</span><span class="gv">jump over</span></div>
+      <div class="guide-row"><span class="gl">Yellow saw blades (ceiling)</span><span class="gv">duck under</span></div>
+      <div class="guide-row"><span class="gl">Lasers / walls</span><span class="gv">dodge to open lane</span></div>
+      <div class="guide-note">Waves alternate action + rest phases. Difficulty ramps over time — new obstacles unlock as you progress</div>
+    </div>
   </div>
   <div id="tab-settings" class="tab-content">
     <div id="settings-title">SETTINGS</div>
@@ -2338,8 +2385,6 @@ function renderTrophyGrid(){
   document.getElementById('trophy-count').textContent=n+' / '+ACHIEVEMENTS.length;
 }
 
-const perfEl=document.getElementById('perf');let pA=0,fC=0,lFps=0;
-function perf(){pA+=dt;fC++;if(pA>=.5){lFps=Math.round(fC/pA);pA=0;fC=0;}const i=R.info.render;perfEl.textContent=`FPS: ${lFps} | Draws: ${i.calls} | Tris: ${i.triangles}`;}
 
 // ═══════════════════════════════════════════════════
 // WEB AUDIO — Embedded MP3 + analyser for visualizer
@@ -3381,7 +3426,7 @@ function loop(){
   const shake=Math.max(screenShake,landShake);if(screenShake>0) screenShake-=dt;if(landShake>0) landShake-=dt*2;
   if(shake>0){const s=shake*(screenShake>landShake?3:1.5);cam.position.x=camTargetX+(Math.random()-.5)*s;cam.position.y=4.8+(Math.random()-.5)*s+jumpY*.25;}
   else{cam.position.x+=(camTargetX-cam.position.x)*dt*4;cam.position.y+=(4.8+jumpY*.25-cam.position.y)*dt*4;}
-  R.render(S,cam);perf();
+  R.render(S,cam);
 }
 (function loadSettings(){
   const m=localStorage.getItem('hd_music'),s=localStorage.getItem('hd_sfx');
